@@ -14,6 +14,7 @@ from juliacall import Main as jl
 
 jl.seval("using GWecc")
 
+
 @enterprise_function
 def eccentric_pta_signal_planck18_1psr(
     toas,
@@ -149,15 +150,61 @@ def get_gwecc_1psr_priors(tref, name="gwecc"):
     }
 
 
-def get_pta(psr, noise_dict, signal_func=eccentric_pta_signal_planck18_1psr, prior_dict=None) -> PTA:
+def test_gwecc_func():
+    alpha = 0.3
+    psi = 1.1
+    cos_inc = 0.4
+    log10_M = 7.0
+    eta = 0.2
+    log10_F = -8.0
+    e0 = 0.3
+    gamma0 = np.pi / 2
+    gammap = np.pi / 2
+    l0 = np.pi / 3
+    lp = np.pi / 3
+    log10_zc = -3.5
+
+    year = 365.25 * 24 * 3600
+    toas = np.linspace(0, 5 * year, 100)
+    tref = max(toas)
+
+    pdist = 400.0
+
+    ss = eccentric_pta_signal_planck18_1psr(
+        toas,
+        pdist,
+        alpha,
+        psi,
+        cos_inc,
+        log10_M,
+        eta,
+        log10_F,
+        e0,
+        gamma0,
+        gammap,
+        l0,
+        lp,
+        tref,
+        log10_zc,
+        psrTerm=False,
+    )
+    assert np.all(np.isfinite(ss))
+
+
+def get_pta(
+    psr, noise_dict, signal_func=eccentric_pta_signal_planck18_1psr, prior_dict=None
+) -> PTA:
     verify_noise_dict(psr, noise_dict)
+    test_gwecc_func()
 
     model = models.model_singlepsr_noise(
         psr, white_vary=False, red_var=False, noisedict=noise_dict, psr_model=True
     )
 
-    signal_priors = get_gwecc_1psr_priors(tref=max(psr.toas)) if prior_dict is None else prior_dict
-    
+    signal_priors = (
+        get_gwecc_1psr_priors(tref=max(psr.toas)) if prior_dict is None else prior_dict
+    )
+
     wf = Deterministic(signal_func(**signal_priors), name="gwecc")
     model += wf
 
@@ -166,13 +213,14 @@ def get_pta(psr, noise_dict, signal_func=eccentric_pta_signal_planck18_1psr, pri
 
     return pta
 
+
 def main():
     prefix = "J1909-3744_NANOGrav_12yv4"
     psr, noise_dict = read_data(prefix)
 
     name = "gwecc"
 
-    tref=max(psr.toas)
+    tref = max(psr.toas)
     priors = {
         "alpha": Uniform(0, 1)(f"{name}_alpha"),
         "psi": Uniform(0, np.pi)(f"{name}_psi"),
@@ -189,8 +237,9 @@ def main():
         "log10_zc": Uniform(-4, -3)(f"{name}_log10_zc"),
     }
 
-    pta = get_pta(psr, noise_dict, prior_dict = priors)
-    print(pta.param_names)    
+    pta = get_pta(psr, noise_dict, prior_dict=priors)
+    print(pta.param_names)
+
 
 if __name__ == "__main__":
     main()
