@@ -168,27 +168,28 @@ def test_gwecc_func():
     toas = np.linspace(0, 5 * year, 100)
     tref = max(toas)
 
-    pdist = 400.0
+    pdist = 4.0
 
-    ss = eccentric_pta_signal_planck18_1psr(
-        toas,
-        pdist,
-        alpha,
-        psi,
-        cos_inc,
-        log10_M,
-        eta,
-        log10_F,
-        e0,
-        gamma0,
-        gammap,
-        l0,
-        lp,
-        tref,
-        log10_zc,
-        psrTerm=False,
-    )
-    assert np.all(np.isfinite(ss))
+    for psrTerm in [True, False]:
+        ss = eccentric_pta_signal_planck18_1psr(
+            toas,
+            pdist,
+            alpha,
+            psi,
+            cos_inc,
+            log10_M,
+            eta,
+            log10_F,
+            e0,
+            gamma0,
+            gammap,
+            l0,
+            lp,
+            tref,
+            log10_zc,
+            psrTerm=False,
+        )
+        assert np.all(np.isfinite(ss))
 
 
 def get_pta(
@@ -207,6 +208,8 @@ def get_pta(
 
     wf = Deterministic(signal_func(**signal_priors), name="gwecc")
     model += wf
+
+    print(f"pdist = {psr.pdist}")
 
     pta = PTA([model(psr)])
     pta.set_default_params(noise_dict)
