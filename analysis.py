@@ -54,7 +54,7 @@ def eccentric_pta_signal_planck18_1psr(
     )
 
 
-def read_psr(model: TimingModel, toas: TOAs, prefix: str):
+def read_psr(model: TimingModel, toas: TOAs, prefix: str) -> PintPulsar:
     psrfile = f"{prefix}.pkl"
     if not os.path.isfile(psrfile):
         psr = Pulsar(model, toas)
@@ -68,7 +68,7 @@ def read_psr(model: TimingModel, toas: TOAs, prefix: str):
     return psr
 
 
-def decode_rednoise_params(rnamp, rnidx):
+def decode_rednoise_params(rnamp: float, rnidx: float):
     # https://github.com/nanograv/pint_pal/blob/main/src/pint_pal/noise_utils.py#L245
     plredamp = np.log10(
         rnamp / ((86400.0 * 365.24 * 1e6) / (2.0 * np.pi * np.sqrt(3.0)))
@@ -78,7 +78,7 @@ def decode_rednoise_params(rnamp, rnidx):
     return plredamp, plredgam
 
 
-def prepare_noise_dict(model: TimingModel):
+def prepare_noise_dict(model: TimingModel) -> dict:
     jname = model.PSR.value
 
     noise_dict = {}
@@ -119,7 +119,7 @@ def verify_noise_dict(psr: PintPulsar, noise_dict: dict):
     assert set(pta.param_names) == set(noise_dict.keys())
 
 
-def read_data(prefix: str):
+def read_data(prefix: str) -> (PintPulsar, dict):
     parfile = f"{prefix}.gls.par"
     timfile = f"{prefix}.tim"
 
@@ -132,7 +132,7 @@ def read_data(prefix: str):
     return psr, noise_dict
 
 
-def get_gwecc_1psr_priors(tref, name="gwecc"):
+def get_gwecc_1psr_priors(tref, name="gwecc") -> dict:
     return {
         "alpha": Uniform(0, 1)(f"{name}_alpha"),
         "psi": Uniform(0, np.pi)(f"{name}_psi"),
