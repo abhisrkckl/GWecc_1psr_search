@@ -81,7 +81,7 @@ def verify_noise_dict(psr: PintPulsar, noise_dict: dict):
     assert set(pta.param_names) == set(noise_dict.keys())
 
 
-def read_data(prefix: str) -> Tuple[PintPulsar, dict]:
+def read_data(prefix: str) -> tuple[PintPulsar, dict]:
     parfile = f"{prefix}.gls.par"
     timfile = f"{prefix}.tim"
 
