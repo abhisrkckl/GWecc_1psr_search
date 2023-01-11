@@ -1,3 +1,4 @@
+from ast import Tuple
 from pint.models import get_model_and_toas, TimingModel
 from pint.toa import TOAs
 from enterprise.pulsar import Pulsar, PintPulsar
@@ -5,6 +6,7 @@ from enterprise.signals.signal_base import PTA, function as enterprise_function
 from enterprise.signals.parameter import Uniform
 from enterprise.signals.deterministic_signals import Deterministic
 from enterprise_extensions import models
+from enterprise_gwecc import gwecc_1psr_block
 
 import os
 import pickle
@@ -13,46 +15,6 @@ import numpy as np
 from juliacall import Main as jl
 
 jl.seval("using GWecc")
-
-
-@enterprise_function
-def eccentric_pta_signal_planck18_1psr(
-    toas,
-    pdist,
-    alpha,
-    psi,
-    cos_inc,
-    log10_M,
-    eta,
-    log10_F,
-    e0,
-    gamma0,
-    gammap,
-    l0,
-    lp,
-    tref,
-    log10_zc,
-    psrTerm=False,
-):
-    return jl.eccentric_pta_signal_planck18_1psr(
-        toas,
-        pdist,
-        alpha,
-        psi,
-        cos_inc,
-        log10_M,
-        eta,
-        log10_F,
-        e0,
-        gamma0,
-        gammap,
-        l0,
-        lp,
-        tref,
-        log10_zc,
-        psrTerm,
-    )
-
 
 def read_psr(model: TimingModel, toas: TOAs, prefix: str) -> PintPulsar:
     psrfile = f"{prefix}.pkl"
@@ -119,7 +81,7 @@ def verify_noise_dict(psr: PintPulsar, noise_dict: dict):
     assert set(pta.param_names) == set(noise_dict.keys())
 
 
-def read_data(prefix: str) -> (PintPulsar, dict):
+def read_data(prefix: str) -> Tuple[PintPulsar, dict]:
     parfile = f"{prefix}.gls.par"
     timfile = f"{prefix}.tim"
 
@@ -132,81 +94,14 @@ def read_data(prefix: str) -> (PintPulsar, dict):
     return psr, noise_dict
 
 
-def get_gwecc_1psr_priors(tref, name="gwecc") -> dict:
-    return {
-        "alpha": Uniform(0, 1)(f"{name}_alpha"),
-        "psi": Uniform(0, np.pi)(f"{name}_psi"),
-        "cos_inc": Uniform(-1, 1)(f"{name}_cos_inc"),
-        "log10_M": Uniform(6, 9)(f"{name}_log10_M"),
-        "eta": Uniform(0, 0.25)(f"{name}_eta"),
-        "log10_F": Uniform(-9, -7)(f"{name}_log10_F"),
-        "e0": Uniform(0.01, 0.8)(f"{name}_e0"),
-        "gamma0": Uniform(0, np.pi)(f"{name}_gamma0"),
-        "gammap": Uniform(0, np.pi)(f"{name}_gammap"),
-        "l0": Uniform(0, 2 * np.pi)(f"{name}_l0"),
-        "lp": Uniform(0, 2 * np.pi)(f"{name}_lp"),
-        "tref": tref,
-        "log10_zc": Uniform(-4, -3)(f"{name}_log10_zc"),
-    }
-
-
-def test_gwecc_func():
-    alpha = 0.3
-    psi = 1.1
-    cos_inc = 0.4
-    log10_M = 7.0
-    eta = 0.2
-    log10_F = -8.0
-    e0 = 0.3
-    gamma0 = np.pi / 2
-    gammap = np.pi / 2
-    l0 = np.pi / 3
-    lp = np.pi / 3
-    log10_zc = -3.5
-
-    year = 365.25 * 24 * 3600
-    toas = np.linspace(0, 5 * year, 100)
-    tref = max(toas)
-
-    pdist = 4.0
-
-    for psrTerm in [True, False]:
-        ss = eccentric_pta_signal_planck18_1psr(
-            toas,
-            pdist,
-            alpha,
-            psi,
-            cos_inc,
-            log10_M,
-            eta,
-            log10_F,
-            e0,
-            gamma0,
-            gammap,
-            l0,
-            lp,
-            tref,
-            log10_zc,
-            psrTerm=False,
-        )
-        assert np.all(np.isfinite(ss))
-
-
-def get_pta(
-    psr, noise_dict, signal_func=eccentric_pta_signal_planck18_1psr, prior_dict=None
-) -> PTA:
+def get_pta(psr, noise_dict, prior_dict=None) -> PTA:
     verify_noise_dict(psr, noise_dict)
-    test_gwecc_func()
 
     model = models.model_singlepsr_noise(
         psr, white_vary=False, red_var=False, noisedict=noise_dict, psr_model=True
     )
-
-    signal_priors = (
-        get_gwecc_1psr_priors(tref=max(psr.toas)) if prior_dict is None else prior_dict
-    )
-
-    wf = Deterministic(signal_func(**signal_priors), name="gwecc")
+    
+    wf = gwecc_1psr_block() if prior_dict is None else gwecc_1psr_block(**prior_dict)
     model += wf
 
     print(f"pdist = {psr.pdist}")
@@ -233,9 +128,9 @@ def main():
         "log10_F": Uniform(-9, -7)(f"{name}_log10_F"),
         "e0": Uniform(0.01, 0.8)(f"{name}_e0"),
         "gamma0": Uniform(0, np.pi)(f"{name}_gamma0"),
-        "gammap": Uniform(0, np.pi)(f"{name}_gammap"),
+        "gammap": Uniform(0, np.pi),
         "l0": Uniform(0, 2 * np.pi)(f"{name}_l0"),
-        "lp": Uniform(0, 2 * np.pi)(f"{name}_lp"),
+        "lp": Uniform(0, 2 * np.pi),
         "tref": tref,
         "log10_zc": Uniform(-4, -3)(f"{name}_log10_zc"),
     }
