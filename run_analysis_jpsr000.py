@@ -4,9 +4,11 @@ from enterprise.signals.gp_signals import TimingModel
 from enterprise.signals.signal_base import PTA
 from enterprise.signals.white_signals import MeasurementNoise
 from enterprise_gwecc import gwecc_1psr_block
+from enterprise_warp.bilby_warp import get_bilby_prior_dict, PTABilbyLikelihood
 
 import numpy as np
-
+import bilby
+import pickle
 
 def main():
     prefix = "JPSR00_simulate"
@@ -45,6 +47,18 @@ def main():
     x0 = [p.sample() for p in pta.params]
     print(x0, pta.get_lnlikelihood(x0))
     
+    bilby_prior = get_bilby_prior_dict(pta)
+    bilby_likelihood = PTABilbyLikelihood(pta, parameters=dict.fromkeys(bilby_prior.keys()))
+    bilby_label = prefix
+
+    result = bilby.run_sampler(
+        likelihood=bilby_likelihood,
+        priors=bilby_prior,
+        outdir='./chains/',
+        label=bilby_label,
+        sampler='nestle',
+        resume=False,
+    )
 
 if __name__ == "__main__":
     main()
