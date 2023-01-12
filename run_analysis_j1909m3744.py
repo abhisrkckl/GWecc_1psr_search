@@ -3,6 +3,7 @@ from enterprise.signals.parameter import Uniform
 
 import numpy as np
 
+
 def main():
     prefix = "J1909-3744_NANOGrav_12yv4"
     parfile = f"{prefix}.gls.par"

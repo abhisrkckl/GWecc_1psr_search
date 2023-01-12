@@ -6,6 +6,7 @@ from enterprise_gwecc import gwecc_1psr_block
 
 import numpy as np
 
+
 def main():
     prefix = "JPSR00_simulate"
     parfile = f"{prefix}.par"

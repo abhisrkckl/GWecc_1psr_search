@@ -9,6 +9,7 @@ import os
 import pickle
 import numpy as np
 
+
 def read_psr(model: TimingModel, toas: TOAs, prefix: str) -> PintPulsar:
     psrfile = f"{prefix}.pkl"
     if not os.path.isfile(psrfile):
@@ -77,10 +78,10 @@ def verify_noise_dict(psr: PintPulsar, noise_dict: dict):
     assert set(pta.param_names) == set(noise_dict.keys())
 
 
-def read_data(parfile:str, timfile:str, prefix:str, noise_dict=True):
+def read_data(parfile: str, timfile: str, prefix: str, noise_dict=True):
     model, toas = get_model_and_toas(parfile, timfile, planets=True, usepickle=True)
     psr = read_psr(model, toas, prefix)
-    
+
     if noise_dict:
         noise_dict = prepare_noise_dict(model)
         verify_noise_dict(psr, noise_dict)
@@ -89,13 +90,14 @@ def read_data(parfile:str, timfile:str, prefix:str, noise_dict=True):
 
     return psr
 
+
 def get_pta(psr, noise_dict, prior_dict=None) -> PTA:
     verify_noise_dict(psr, noise_dict)
 
     model = models.model_singlepsr_noise(
         psr, white_vary=False, red_var=False, noisedict=noise_dict, psr_model=True
     )
-    
+
     wf = gwecc_1psr_block() if prior_dict is None else gwecc_1psr_block(**prior_dict)
     model += wf
 
@@ -105,4 +107,3 @@ def get_pta(psr, noise_dict, prior_dict=None) -> PTA:
     pta.set_default_params(noise_dict)
 
     return pta
-
