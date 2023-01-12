@@ -1,7 +1,8 @@
 from analysis import read_data
 from enterprise.signals.parameter import Uniform
-from enterprise.signals.gp_signals import MarginalizingTimingModel
+from enterprise.signals.gp_signals import TimingModel
 from enterprise.signals.signal_base import PTA
+from enterprise.signals.white_signals import MeasurementNoise
 from enterprise_gwecc import gwecc_1psr_block
 
 import numpy as np
@@ -32,14 +33,18 @@ def main():
         "log10_zc": Uniform(-4, -3)(f"{name}_log10_zc"),
     }
 
-    tm = MarginalizingTimingModel()
+    tm = TimingModel()
+    wn = MeasurementNoise(efac=1)
     wf = gwecc_1psr_block(**priors)
-    model = tm + wf
+    model = tm + wn + wf
 
     pta = PTA([model(psr)])
 
     print(pta.param_names)
-
+    
+    x0 = [p.sample() for p in pta.params]
+    print(x0, pta.get_lnlikelihood(x0))
+    
 
 if __name__ == "__main__":
     main()
