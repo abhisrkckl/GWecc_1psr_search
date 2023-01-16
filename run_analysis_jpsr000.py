@@ -1,13 +1,14 @@
-from analysis import read_data
+from analysis import read_data, prior_transform_fn
 from enterprise.signals.parameter import Uniform
 from enterprise.signals.gp_signals import TimingModel
 from enterprise.signals.signal_base import PTA
 from enterprise.signals.white_signals import MeasurementNoise
 from enterprise_gwecc import gwecc_1psr_block
-from enterprise_warp.bilby_warp import get_bilby_prior_dict, PTABilbyLikelihood
+#from enterprise_warp.bilby_warp import get_bilby_prior_dict, PTABilbyLikelihood
 
 import numpy as np
 import bilby
+import nestle
 import pickle
 
 def main():
@@ -47,18 +48,32 @@ def main():
     x0 = [p.sample() for p in pta.params]
     print(x0, pta.get_lnlikelihood(x0))
     
-    bilby_prior = get_bilby_prior_dict(pta)
-    bilby_likelihood = PTABilbyLikelihood(pta, parameters=dict.fromkeys(bilby_prior.keys()))
-    bilby_label = prefix
+    # bilby_prior = get_bilby_prior_dict(pta)
+    # bilby_likelihood = PTABilbyLikelihood(pta, parameters=dict.fromkeys(bilby_prior.keys()))
+    # bilby_label = prefix
 
-    result = bilby.run_sampler(
-        likelihood=bilby_likelihood,
-        priors=bilby_prior,
-        outdir='./chains/',
-        label=bilby_label,
-        sampler='nestle',
-        resume=False,
+    # result = bilby.run_sampler(
+    #     likelihood=bilby_likelihood,
+    #     priors=bilby_prior,
+    #     outdir='./chains/',
+    #     label=bilby_label,
+    #     sampler='nestle',
+    #     resume=False,
+    # )
+
+    prior_transform = prior_transform_fn(pta)
+    result = nestle.sample(
+        loglikelihood=pta.get_lnlikelihood,
+        prior_transform=prior_transform,
+        ndim=len(x0),
+        npoints=500,
+        method="multi",
+        dlogz=0.1,
+        callback=nestle.print_progress       
     )
+
+    with open(f"{prefix}_result.pkl", "wb") as pkl:
+        pickle.dump(result, pkl)
 
 if __name__ == "__main__":
     main()
