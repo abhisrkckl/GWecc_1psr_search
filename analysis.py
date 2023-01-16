@@ -107,3 +107,13 @@ def get_pta(psr, noise_dict, prior_dict=None) -> PTA:
     pta.set_default_params(noise_dict)
 
     return pta
+
+def prior_transform_fn(pta):
+    mins = np.array([param.prior.func_kwargs['pmin'] for param in pta.params])
+    maxs = np.array([param.prior.func_kwargs['pmax'] for param in pta.params])
+    spans = maxs-mins
+    
+    def prior_transform(cube):
+        return spans*cube + mins
+    
+    return prior_transform
