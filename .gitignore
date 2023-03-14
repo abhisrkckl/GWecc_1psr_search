@@ -2,3 +2,7 @@
 *.pkl
 *.gz
 __pycache__/
+chain*.txt
+*_jump.txt
+*.npy
+jumps.txt
