@@ -8,6 +8,8 @@ from enterprise_gwecc import gwecc_1psr_block
 import os
 import pickle
 import numpy as np
+import astropy.units as u
+import astropy.constants as c
 
 
 def read_psr(model: TimingModel, toas: TOAs, prefix: str) -> PintPulsar:
@@ -117,3 +119,9 @@ def prior_transform_fn(pta):
         return spans*cube + mins
     
     return prior_transform
+
+def get_deltap_max(psr):
+    Dp = psr.pdist[0]
+    sigma_Dp = psr.pdist[1]
+    Dp_max = Dp + sigma_Dp
+    return (Dp_max * u.Unit("kpc") / c.c).to("year").value
