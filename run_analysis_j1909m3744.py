@@ -9,7 +9,7 @@ def main():
     prefix = "J1909-3744_NANOGrav_12yv4"
     parfile = f"{prefix}.gls.par"
     timfile = f"{prefix}.tim"
-    psr, noise_dict = read_data(parfile, timfile, prefix)
+    psr, noise_dict = read_data(parfile, timfile, prefix, noise_dict_file="channelized_12p5yr_v3_full_noisedict.json")
 
     name = "gwecc"
 
@@ -40,7 +40,7 @@ def main():
 
     ndim = len(x0)
     cov = np.diag(np.ones(ndim) * 0.01**2)
-    Niter = 500000
+    Niter =  1000000
     x0 = np.hstack(x0)
     sampler = ptmcmc(
         ndim,

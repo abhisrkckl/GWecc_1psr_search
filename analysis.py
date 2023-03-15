@@ -5,6 +5,7 @@ from enterprise.signals.signal_base import PTA
 from enterprise_extensions import models
 from enterprise_gwecc import gwecc_1psr_block
 
+import json
 import os
 import pickle
 import numpy as np
@@ -80,12 +81,14 @@ def verify_noise_dict(psr: PintPulsar, noise_dict: dict):
     assert set(pta.param_names) == set(noise_dict.keys())
 
 
-def read_data(parfile: str, timfile: str, prefix: str, noise_dict=True):
+def read_data(parfile: str, timfile: str, prefix: str, noise_dict_file=None):
     model, toas = get_model_and_toas(parfile, timfile, planets=True, usepickle=True)
     psr = read_psr(model, toas, prefix)
 
-    if noise_dict:
-        noise_dict = prepare_noise_dict(model)
+    if noise_dict_file is not None:
+        # noise_dict = prepare_noise_dict(model)
+        with open(noise_dict_file, "r") as ndf:
+            noise_dict = json.load(ndf)
         verify_noise_dict(psr, noise_dict)
 
         return psr, noise_dict
