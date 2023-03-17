@@ -1,4 +1,5 @@
 import pickle
+import os
 from datetime import datetime
 
 import corner
@@ -49,6 +50,8 @@ def main():
     print("Log-likelihood at", x0, "is", pta.get_lnlikelihood(x0))
 
     outdir = "chains_" + datetime.now().strftime("%Y-%m-%dT%Hh%Mm%Ss") + "/"
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
 
     with open(f"{outdir}/pta.pkl", "wb") as ptapkl:
         pickle.dump(pta, ptapkl)
