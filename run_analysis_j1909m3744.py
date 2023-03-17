@@ -4,6 +4,7 @@ from PTMCMCSampler.PTMCMCSampler import PTSampler as ptmcmc
 from datetime import datetime
 
 import numpy as np
+import pickle
 
 
 def main():
@@ -40,6 +41,13 @@ def main():
     print("Log-likelihood at", x0, "is", pta.get_lnlikelihood(x0))
 
     outdir = "chains_" + datetime.now().strftime("%Y-%m-%dT%Hh%Mm%Ss") + "/"
+    
+    with open(f"{outdir}/pta.pkl", "wb") as ptapkl:
+        pickle.dump(pta, ptapkl)
+
+    description = "Test run"
+    with open(f"{outdir}/desc.txt", "w") as descfile:
+        descfile.write(description)
 
     ndim = len(x0)
     cov = np.diag(np.ones(ndim) * 0.01**2)
