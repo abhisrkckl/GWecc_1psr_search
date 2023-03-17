@@ -1,6 +1,7 @@
 from analysis import read_data, get_pta, get_deltap_max
 from enterprise.signals.parameter import Uniform
 from PTMCMCSampler.PTMCMCSampler import PTSampler as ptmcmc
+from datetime import datetime
 
 import numpy as np
 
@@ -38,6 +39,8 @@ def main():
     x0 = np.array([p.sample() for p in pta.params])
     print("Log-likelihood at", x0, "is", pta.get_lnlikelihood(x0))
 
+    outdir = "chains_" + datetime.now().strftime("%Y-%m-%dT%Hh%Mm%Ss") + "/"
+
     ndim = len(x0)
     cov = np.diag(np.ones(ndim) * 0.01**2)
     Niter =  1000000
@@ -47,7 +50,7 @@ def main():
         pta.get_lnlikelihood,
         pta.get_lnprior,
         cov,
-        outDir="chains/",
+        outDir=outdir,
         resume=False,
     )
     # This sometimes fails if the acor package is installed, but works otherwise.
