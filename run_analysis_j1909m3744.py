@@ -51,19 +51,23 @@ def main():
 
     outdir = "chains_" + datetime.now().strftime("%Y-%m-%dT%Hh%Mm%Ss") + "/"
     if not os.path.exists(outdir):
+        print("Creating output dir...")
         os.mkdir(outdir)
 
     with open(f"{outdir}/pta.pkl", "wb") as ptapkl:
+        print("Pickling PTA object...")
         pickle.dump(pta, ptapkl)
 
     description = "Test run"
     with open(f"{outdir}/desc.txt", "w") as descfile:
+        print("Writing description file...")
         descfile.write(description)
 
     ndim = len(x0)
     cov = np.diag(np.ones(ndim) * 0.01**2)
     Niter = 1000000
     x0 = np.hstack(x0)
+    print("Starting sampler...\n")
     sampler = ptmcmc(
         ndim,
         pta.get_lnlikelihood,
@@ -71,10 +75,13 @@ def main():
         cov,
         outDir=outdir,
         resume=False,
+        verbose=True
     )
     # This sometimes fails if the acor package is installed, but works otherwise.
     # I don't know why.
     sampler.sample(x0, Niter)
+
+    print("")
 
     chain_file = f"{outdir}/chain_1.txt"
     chain = np.loadtxt(chain_file)
@@ -83,6 +90,7 @@ def main():
     burn = chain.shape[0] // 4
     burned_chain = chain[burn:, :-4]
 
+    print("Savving plots...")
     for i in range(ndim):
         plt.subplot(ndim, 1, i + 1)
         param_name = pta.param_names[i]
@@ -93,6 +101,8 @@ def main():
 
     corner.corner(burned_chain, labels=pta.param_names)
     plt.savefig(f"{outdir}/corner.pdf")
+
+    print("Done.")
 
 
 if __name__ == "__main__":
