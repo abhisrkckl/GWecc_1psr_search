@@ -58,7 +58,7 @@ def main():
         "parfile": parfile,
         "timfile": timfile,
         "noise_dict": noise_dict,
-        "gwecc_params": priors,
+        # "gwecc_params": priors,
     }
     with open(f"{outdir}/summary.pkl", "wb") as summarypkl:
         print("Pickling summary...")
