@@ -1,17 +1,25 @@
-from analysis import read_data, get_pta, get_deltap_max
-from enterprise.signals.parameter import Uniform
-from PTMCMCSampler.PTMCMCSampler import PTSampler as ptmcmc
+import pickle
 from datetime import datetime
 
+import corner
 import numpy as np
-import pickle
+from enterprise.signals.parameter import Uniform
+from matplotlib import pyplot as plt
+from PTMCMCSampler.PTMCMCSampler import PTSampler as ptmcmc
+
+from analysis import get_deltap_max, get_pta, read_data
 
 
 def main():
     prefix = "J1909-3744_NANOGrav_12yv4"
     parfile = f"{prefix}.gls.par"
     timfile = f"{prefix}.tim"
-    psr, noise_dict = read_data(parfile, timfile, prefix, noise_dict_file="channelized_12p5yr_v3_full_noisedict.json")
+    psr, noise_dict = read_data(
+        parfile,
+        timfile,
+        prefix,
+        noise_dict_file="channelized_12p5yr_v3_full_noisedict.json",
+    )
 
     name = "gwecc"
 
@@ -20,11 +28,11 @@ def main():
     priors = {
         "sigma": Uniform(0, np.pi)(f"{name}_sigma"),
         "rho": Uniform(-np.pi, np.pi)(f"{name}_rho"),
-        "log10_M": 9.0, # Uniform(6, 9)(f"{name}_log10_M"), 
-        "eta": 0.25, # Uniform(0, 0.25)(f"{name}_eta"),
-        "log10_F": -8, # Uniform(-9, -7)(f"{name}_log10_F"),
-        "e0": 0.5, # Uniform(0.01, 0.8)(f"{name}_e0"),
-        "l0": 0.0, # Uniform(-np.pi, np.pi)(f"{name}_l0"),
+        "log10_M": 9.0,  # Uniform(6, 9)(f"{name}_log10_M"),
+        "eta": 0.25,  # Uniform(0, 0.25)(f"{name}_eta"),
+        "log10_F": -8,  # Uniform(-9, -7)(f"{name}_log10_F"),
+        "e0": 0.5,  # Uniform(0.01, 0.8)(f"{name}_e0"),
+        "l0": 0.0,  # Uniform(-np.pi, np.pi)(f"{name}_l0"),
         "tref": tref,
         "log10_A": Uniform(-11, -5)(f"{name}_log10_A"),
         "deltap": Uniform(0, deltap_max),
@@ -41,7 +49,7 @@ def main():
     print("Log-likelihood at", x0, "is", pta.get_lnlikelihood(x0))
 
     outdir = "chains_" + datetime.now().strftime("%Y-%m-%dT%Hh%Mm%Ss") + "/"
-    
+
     with open(f"{outdir}/pta.pkl", "wb") as ptapkl:
         pickle.dump(pta, ptapkl)
 
@@ -51,7 +59,7 @@ def main():
 
     ndim = len(x0)
     cov = np.diag(np.ones(ndim) * 0.01**2)
-    Niter =  1000000
+    Niter = 1000000
     x0 = np.hstack(x0)
     sampler = ptmcmc(
         ndim,
@@ -65,12 +73,23 @@ def main():
     # I don't know why.
     sampler.sample(x0, Niter)
 
-    chain_file = "chains/chain_1.txt"
+    chain_file = f"{outdir}/chain_1.txt"
     chain = np.loadtxt(chain_file)
     print("Chain shape :", chain.shape)
 
-    burn = chain.shape[0] // 3
+    burn = chain.shape[0] // 4
     burned_chain = chain[burn:, :-4]
+
+    for i in range(ndim):
+        plt.subplot(ndim, 1, i + 1)
+        param_name = pta.param_names[i]
+        plt.plot(burned_chain[:, i])
+        # plt.axhline(true_params[param_name], c="k")
+        plt.ylabel(param_name)
+    plt.savefig(f"{outdir}/chains.pdf")
+
+    corner.corner(burned_chain, labels=pta.param_names)
+    plt.savefig(f"{outdir}/corner.pdf")
 
 
 if __name__ == "__main__":
