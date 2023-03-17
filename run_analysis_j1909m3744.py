@@ -54,9 +54,15 @@ def main():
         print("Creating output dir...")
         os.mkdir(outdir)
 
-    with open(f"{outdir}/pta.pkl", "wb") as ptapkl:
-        print("Pickling PTA object...")
-        pickle.dump(pta, ptapkl)
+    summary = {
+        "parfile": parfile,
+        "timfile": timfile,
+        "noise_dict": noise_dict,
+        "gwecc_params": priors,
+    }
+    with open(f"{outdir}/summary.pkl", "wb") as summarypkl:
+        print("Pickling summary...")
+        pickle.dump(summary, summarypkl)
 
     description = "Test run"
     with open(f"{outdir}/desc.txt", "w") as descfile:
@@ -75,7 +81,7 @@ def main():
         cov,
         outDir=outdir,
         resume=False,
-        verbose=True
+        verbose=True,
     )
     # This sometimes fails if the acor package is installed, but works otherwise.
     # I don't know why.
