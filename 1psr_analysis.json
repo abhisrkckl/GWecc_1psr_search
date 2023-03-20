@@ -6,12 +6,7 @@
     "noise_dict_file" : "channelized_12p5yr_v3_full_noisedict.json",
     "ecw_name": "gwecc",
     "vary_red_noise": true,
-    "ecw_frozen_params": {
-        "log10_M": 9.0,
-        "eta": 0.25,
-        "e0": 0.5,
-        "l0": 0.0
-    },
+    "ecw_frozen_params": { },
     "ecw_psrTerm": false,
     "ecw_spline": true,
     "output_prefix": "chains",
