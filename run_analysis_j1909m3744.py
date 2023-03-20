@@ -13,13 +13,13 @@ from analysis import get_deltap_max, get_pta, read_data
 
 def main():
     prefix = "J1909-3744_NANOGrav_12yv4"
-    parfile = f"{prefix}.gls.par"
-    timfile = f"{prefix}.tim"
+    parfile = f"data/{prefix}.gls.par"
+    timfile = f"data/{prefix}.tim"
     psr, noise_dict = read_data(
         parfile,
         timfile,
         prefix,
-        noise_dict_file="channelized_12p5yr_v3_full_noisedict.json",
+        noise_dict_file="data/channelized_12p5yr_v3_full_noisedict.json",
     )
 
     name = "gwecc"
