@@ -1,7 +1,7 @@
-import pickle
-import os
-import sys
 import json
+import os
+import pickle
+import sys
 from datetime import datetime
 
 import corner
@@ -17,7 +17,7 @@ def main():
     settings_file = sys.argv[1]
     with open(settings_file, "r") as sf:
         settings = json.load(sf)
-    
+
     data_dir = settings["data_dir"]
     par_file = settings["par_file"]
     tim_file = settings["tim_file"]
@@ -39,7 +39,7 @@ def main():
         "rho": Uniform(-np.pi, np.pi)(f"{name}_rho"),
         "log10_M": Uniform(6, 9)(f"{name}_log10_M"),
         "eta": Uniform(0, 0.25)(f"{name}_eta"),
-        "log10_F":  Uniform(-9, -7)(f"{name}_log10_F"),
+        "log10_F": Uniform(-9, -7)(f"{name}_log10_F"),
         "e0": Uniform(0.01, 0.8)(f"{name}_e0"),
         "l0": Uniform(-np.pi, np.pi)(f"{name}_l0"),
         "tref": tref,
@@ -66,9 +66,7 @@ def main():
         print(f"Creating output dir {outdir}...")
         os.mkdir(outdir)
 
-    summary = settings | {
-        "output_dir": outdir
-    }
+    summary = settings | {"output_dir": outdir}
     with open(f"{outdir}/summary.pkl", "wb") as summarypkl:
         print("Pickling summary...")
         pickle.dump(summary, summarypkl)
