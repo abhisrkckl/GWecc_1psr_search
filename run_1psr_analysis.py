@@ -66,8 +66,8 @@ def main():
         print(f"Creating output dir {outdir}...")
         os.mkdir(outdir)
 
-    summary = settings | {"output_dir": outdir}
-    with open(f"{outdir}/summary.pkl", "w") as summarypkl:
+    summary = settings | {"output_dir": outdir, "pta_free_params": pta.param_names}
+    with open(f"{outdir}/summary.json", "w") as summarypkl:
         print("Pickling summary...")
         json.dump(summary, summarypkl, indent=4)
 
