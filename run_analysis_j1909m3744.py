@@ -31,7 +31,7 @@ def main():
         "rho": Uniform(-np.pi, np.pi)(f"{name}_rho"),
         "log10_M": 9.0,  # Uniform(6, 9)(f"{name}_log10_M"),
         "eta": 0.25,  # Uniform(0, 0.25)(f"{name}_eta"),
-        "log10_F": -8,  # Uniform(-9, -7)(f"{name}_log10_F"),
+        "log10_F":  Uniform(-9, -7)(f"{name}_log10_F"),
         "e0": 0.5,  # Uniform(0.01, 0.8)(f"{name}_e0"),
         "l0": 0.0,  # Uniform(-np.pi, np.pi)(f"{name}_l0"),
         "tref": tref,
@@ -71,7 +71,7 @@ def main():
 
     ndim = len(x0)
     cov = np.diag(np.ones(ndim) * 0.01**2)
-    Niter = 1000000
+    Niter = 5000000
     x0 = np.hstack(x0)
     print("Starting sampler...\n")
     sampler = ptmcmc(
