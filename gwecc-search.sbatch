@@ -8,4 +8,4 @@
 echo $CONDA_PREFIX
 date
 
-python run_analysis_j1909m3744.py
+python run_1psr_analysis.py 1psr_analysis.json
