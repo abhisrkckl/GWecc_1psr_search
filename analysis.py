@@ -13,13 +13,15 @@ import astropy.units as u
 import astropy.constants as c
 
 
-def read_psr(model: TimingModel, toas: TOAs, prefix: str) -> PintPulsar:
-    psrfile = f"{prefix}.pkl"
+def read_psr(datadir: str, parfile: str, timfile: str) -> PintPulsar:
+    prefix = "".join(timfile.split(".")[:-1])
+    psrfile = f"{datadir}/{prefix}.pkl"
     if not os.path.isfile(psrfile):
-        psr = Pulsar(model, toas)
+        psr = Pulsar(f"{datadir}/{parfile}", f"{datadir}/{timfile}", timing_package="pint")
         with open(psrfile, "wb") as pkl:
             pickle.dump(psr, pkl)
     else:
+        print(f"Loading pulsar from pickle {psrfile}")
         with open(psrfile, "rb") as pkl:
             psr = pickle.load(pkl)
             assert isinstance(psr, PintPulsar)
@@ -81,29 +83,25 @@ def verify_noise_dict(psr: PintPulsar, noise_dict: dict):
     assert set(pta.param_names) == set(noise_dict.keys())
 
 
-def read_data(parfile: str, timfile: str, prefix: str, noise_dict_file=None):
-    model, toas = get_model_and_toas(parfile, timfile, planets=True, usepickle=True)
-    psr = read_psr(model, toas, prefix)
+def read_data(data_dir: str, par_file: str, tim_file: str, noise_dict_file: str):
+    # model, toas = get_model_and_toas(parfile, timfile, planets=True, usepickle=True)
+    psr = read_psr(data_dir, par_file, tim_file)
 
-    if noise_dict_file is not None:
-        # noise_dict = prepare_noise_dict(model)
-        with open(noise_dict_file, "r") as ndf:
-            noise_dict = json.load(ndf)
-        verify_noise_dict(psr, noise_dict)
+    with open(f"{data_dir}/{noise_dict_file}", "r") as ndf:
+        noise_dict = json.load(ndf)
+    verify_noise_dict(psr, noise_dict)
 
-        return psr, noise_dict
-
-    return psr
+    return psr, noise_dict
 
 
-def get_pta(psr, noise_dict, prior_dict=None) -> PTA:
+def get_pta(psr, vary_red_noise, noise_dict, ecw_param_dict) -> PTA:
     verify_noise_dict(psr, noise_dict)
 
     model = models.model_singlepsr_noise(
-        psr, white_vary=False, red_var=True, noisedict=noise_dict, psr_model=True
+        psr, white_vary=False, red_var=vary_red_noise, noisedict=noise_dict, psr_model=True
     )
 
-    wf = gwecc_1psr_block() if prior_dict is None else gwecc_1psr_block(**prior_dict)
+    wf = gwecc_1psr_block(**ecw_param_dict)
     model += wf
 
     print(f"pdist = {psr.pdist}")
