@@ -69,7 +69,7 @@ def main():
     summary = settings | {"output_dir": outdir}
     with open(f"{outdir}/summary.pkl", "w") as summarypkl:
         print("Pickling summary...")
-        json.dump(summary, summarypkl)
+        json.dump(summary, summarypkl, indent=4)
 
     ndim = len(x0)
     cov = np.diag(np.ones(ndim) * 0.01**2)
