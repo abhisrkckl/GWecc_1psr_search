@@ -67,9 +67,9 @@ def main():
         os.mkdir(outdir)
 
     summary = settings | {"output_dir": outdir}
-    with open(f"{outdir}/summary.pkl", "wb") as summarypkl:
+    with open(f"{outdir}/summary.pkl", "w") as summarypkl:
         print("Pickling summary...")
-        pickle.dump(summary, summarypkl)
+        json.dump(summary, summarypkl)
 
     ndim = len(x0)
     cov = np.diag(np.ones(ndim) * 0.01**2)
