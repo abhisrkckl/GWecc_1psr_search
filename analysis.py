@@ -100,7 +100,7 @@ def get_pta(psr, noise_dict, prior_dict=None) -> PTA:
     verify_noise_dict(psr, noise_dict)
 
     model = models.model_singlepsr_noise(
-        psr, white_vary=False, red_var=False, noisedict=noise_dict, psr_model=True
+        psr, white_vary=False, red_var=True, noisedict=noise_dict, psr_model=True
     )
 
     wf = gwecc_1psr_block() if prior_dict is None else gwecc_1psr_block(**prior_dict)
