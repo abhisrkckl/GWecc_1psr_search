@@ -9,6 +9,7 @@ from enterprise.pulsar import PintPulsar, Pulsar
 from enterprise.signals.signal_base import PTA
 from enterprise_extensions import models
 from enterprise_gwecc import gwecc_1psr_block
+from model import model_gwecc_1psr
 
 
 def read_psr(datadir: str, parfile: str, timfile: str) -> PintPulsar:
@@ -94,21 +95,28 @@ def read_data(data_dir: str, par_file: str, tim_file: str, noise_dict_file: str)
     return psr, noise_dict
 
 
-def get_pta(psr, vary_red_noise, noise_dict, ecw_param_dict, noise_only=False) -> PTA:
+def get_pta(psr, noise_dict, ecw_param_dict, noise_only=False) -> PTA:
     verify_noise_dict(psr, noise_dict)
 
-    model = models.model_singlepsr_noise(
-        psr,
-        white_vary=False,
-        red_var=vary_red_noise,
-        noisedict=noise_dict,
-        psr_model=True,
-        tm_marg=True
+    model = model_gwecc_1psr(
+        noise_only=noise_only,
+        wn_vary=False,
+        rn_components=30,
+        ecw_param_dict=ecw_param_dict
     )
+    
+    # model = models.model_singlepsr_noise(
+    #     psr,
+    #     white_vary=False,
+    #     red_var=vary_red_noise,
+    #     noisedict=noise_dict,
+    #     psr_model=True,
+    #     tm_marg=True
+    # )
 
-    if not noise_only:
-        wf = gwecc_1psr_block(**ecw_param_dict)
-        model += wf
+    # if not noise_only:
+    #     wf = gwecc_1psr_block(**ecw_param_dict)
+    #     model += wf
 
     print(f"pdist = {psr.pdist}")
 
