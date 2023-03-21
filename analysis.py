@@ -77,7 +77,7 @@ def read_psr(datadir: str, parfile: str, timfile: str) -> PintPulsar:
 
 def verify_noise_dict(psr: PintPulsar, noise_dict: dict):
     model = models.model_singlepsr_noise(
-        psr, white_vary=True, red_var=True, noisedict=noise_dict, psr_model=True
+        psr, white_vary=True, red_var=True, noisedict=noise_dict, psr_model=True, tm_marg=True
     )
     pta = PTA([model(psr)])
     assert set(pta.param_names) == set(noise_dict.keys())
@@ -103,6 +103,7 @@ def get_pta(psr, vary_red_noise, noise_dict, ecw_param_dict) -> PTA:
         red_var=vary_red_noise,
         noisedict=noise_dict,
         psr_model=True,
+        tm_marg=True
     )
 
     wf = gwecc_1psr_block(**ecw_param_dict)
@@ -132,3 +133,5 @@ def get_deltap_max(psr):
     sigma_Dp = psr.pdist[1]
     Dp_max = Dp + sigma_Dp
     return (Dp_max * u.Unit("kpc") / c.c).to("year").value
+
+
