@@ -34,7 +34,7 @@ def main():
 
     tref = max(psr.toas)
     deltap_max = get_deltap_max(psr)
-    priors = {
+    ecw_params = {
         "sigma": Uniform(0, np.pi)(f"{name}_sigma"),
         "rho": Uniform(-np.pi, np.pi)(f"{name}_rho"),
         "log10_M": Uniform(6, 9)(f"{name}_log10_M"),
@@ -48,10 +48,10 @@ def main():
         "psrTerm": settings["ecw_psrTerm"],
         "spline": settings["ecw_spline"],
     }
-    priors.update(settings["ecw_frozen_params"])
+    ecw_params.update(settings["ecw_frozen_params"])
 
     vary_red_noise = settings["vary_red_noise"]
-    pta = get_pta(psr, vary_red_noise, noise_dict, priors)
+    pta = get_pta(psr, vary_red_noise, noise_dict, ecw_params, noise_only=settings["noise_only"])
     print("Free parameters :", pta.param_names)
 
     # Make sure that the PTA object works.

@@ -1,11 +1,12 @@
 {
-    "description" : "Test run",
+    "description" : "Noise only run",
     "data_dir" : "data",
     "par_file" : "J1909-3744_NANOGrav_12yv4.gls.par",
     "tim_file" : "J1909-3744_NANOGrav_12yv4.tim",
     "noise_dict_file" : "channelized_12p5yr_v3_full_noisedict.json",
     "ecw_name": "gwecc",
     "vary_red_noise": true,
+    "noise_only": true,
     "ecw_frozen_params": { },
     "ecw_psrTerm": false,
     "ecw_spline": true,

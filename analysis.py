@@ -94,7 +94,7 @@ def read_data(data_dir: str, par_file: str, tim_file: str, noise_dict_file: str)
     return psr, noise_dict
 
 
-def get_pta(psr, vary_red_noise, noise_dict, ecw_param_dict) -> PTA:
+def get_pta(psr, vary_red_noise, noise_dict, ecw_param_dict, noise_only=False) -> PTA:
     verify_noise_dict(psr, noise_dict)
 
     model = models.model_singlepsr_noise(
@@ -106,8 +106,9 @@ def get_pta(psr, vary_red_noise, noise_dict, ecw_param_dict) -> PTA:
         tm_marg=True
     )
 
-    wf = gwecc_1psr_block(**ecw_param_dict)
-    model += wf
+    if not noise_only:
+        wf = gwecc_1psr_block(**ecw_param_dict)
+        model += wf
 
     print(f"pdist = {psr.pdist}")
 
