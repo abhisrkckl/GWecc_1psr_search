@@ -66,9 +66,13 @@ def main():
         print(f"Creating output dir {outdir}...")
         os.mkdir(outdir)
 
-    summary = settings | {"output_dir": outdir, "pta_free_params": pta.param_names}
+    summary = settings | {
+        "output_dir": outdir, 
+        "pta_free_params": pta.param_names,
+        "slurm_job_id": os.environ["SLURM_JOB_ID"]
+    }
     with open(f"{outdir}/summary.json", "w") as summarypkl:
-        print("Pickling summary...")
+        print("Saving summary...")
         json.dump(summary, summarypkl, indent=4)
 
     ndim = len(x0)
