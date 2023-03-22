@@ -6,7 +6,7 @@
     "noise_dict_file" : "channelized_12p5yr_v3_full_noisedict.json",
     "ecw_name": "gwecc",
     "vary_red_noise": true,
-    "noise_only": true,
+    "noise_only": false,
     "ecw_frozen_params": { },
     "ecw_psrTerm": false,
     "ecw_spline": true,
