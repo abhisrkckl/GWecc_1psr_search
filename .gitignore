@@ -7,3 +7,5 @@ chain*.txt
 *.npy
 jumps.txt
 chains*
+*.out
+*.bak

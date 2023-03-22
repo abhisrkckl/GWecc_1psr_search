@@ -60,8 +60,9 @@ def main():
     print("Log-likelihood at", x0, "is", pta.get_lnlikelihood(x0))
 
     output_prefix = settings["output_prefix"]
+    jobid = "" if "SLURM_JOB_ID" not in os.environ else os.environ["SLURM_JOB_ID"]
     time_suffix = datetime.now().strftime("%Y-%m-%dT%Hh%Mm%Ss")
-    outdir = f"{output_prefix}_{time_suffix}/"
+    outdir = f"{output_prefix}_{jobid}_{time_suffix}/"
     if not os.path.exists(outdir):
         print(f"Creating output dir {outdir}...")
         os.mkdir(outdir)
