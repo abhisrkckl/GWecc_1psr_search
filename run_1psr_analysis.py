@@ -117,6 +117,7 @@ def main():
     plt.savefig(f"{outdir}/corner.pdf")
 
     if not settings["noise_only"]:
+        plt.clf()
         plot_upper_limit(
             pta.param_names, 
             burned_chain, 
@@ -128,6 +129,7 @@ def main():
         )
         plt.savefig(f"{outdir}/upper_limit_freq.pdf")
 
+        plt.clf()
         plot_upper_limit(
             pta.param_names, 
             burned_chain, 
@@ -139,6 +141,7 @@ def main():
         )
         plt.savefig(f"{outdir}/upper_limit_mass.pdf")
 
+        plt.clf()
         plot_upper_limit(
             pta.param_names, 
             burned_chain, 
