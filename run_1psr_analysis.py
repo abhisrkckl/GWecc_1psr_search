@@ -57,8 +57,8 @@ def main():
     # This also triggers JIT compilation of julia code and the caching of ENTERPRISE computations.
     print("Testing likelihood and prior...")
     x0 = np.array([p.sample() for p in pta.params])
-    print("Log-prior at", x0, "is", pta.get_lnprior(x0))
-    print("Log-likelihood at", x0, "is", pta.get_lnlikelihood(x0))
+    print("Log-prior at the test point is", pta.get_lnprior(x0))
+    print("Log-likelihood at the test point is", pta.get_lnlikelihood(x0))
 
     output_prefix = settings["output_prefix"]
     jobid = "" if "SLURM_JOB_ID" not in os.environ else os.environ["SLURM_JOB_ID"]
