@@ -75,35 +75,35 @@ def main():
         print("Saving summary...")
         json.dump(summary, summarypkl, indent=4)
 
-    ndim = len(x0)
-    cov = np.diag(np.ones(ndim) * 0.01**2)
-    Niter = settings["ptmcmc_niter"]
-    x0 = np.hstack(x0)
-    print("Starting sampler...\n")
-    sampler = ptmcmc(
-        ndim,
-        pta.get_lnlikelihood,
-        pta.get_lnprior,
-        cov,
-        outDir=outdir,
-        resume=False,
-        verbose=True,
-    )
-    # This sometimes fails if the acor package is installed, but works otherwise.
-    # I don't know why.
-    sampler.sample(x0, Niter)
-
-    print("")
-
-    chain_file = f"{outdir}/chain_1.txt"
-    chain = np.loadtxt(chain_file)
-    print("Chain shape :", chain.shape)
-
-    burnin_fraction = settings["ptmcmc_burnin_fraction"]
-    burn = int(chain.shape[0] * burnin_fraction)
-    burned_chain = chain[burn:, :-4]
-
     if settings["run_sampler"]:
+        ndim = len(x0)
+        cov = np.diag(np.ones(ndim) * 0.01**2)
+        Niter = settings["ptmcmc_niter"]
+        x0 = np.hstack(x0)
+        print("Starting sampler...\n")
+        sampler = ptmcmc(
+            ndim,
+            pta.get_lnlikelihood,
+            pta.get_lnprior,
+            cov,
+            outDir=outdir,
+            resume=False,
+            verbose=True,
+        )
+        # This sometimes fails if the acor package is installed, but works otherwise.
+        # I don't know why.
+        sampler.sample(x0, Niter)
+
+        print("")
+
+        chain_file = f"{outdir}/chain_1.txt"
+        chain = np.loadtxt(chain_file)
+        print("Chain shape :", chain.shape)
+
+        burnin_fraction = settings["ptmcmc_burnin_fraction"]
+        burn = int(chain.shape[0] * burnin_fraction)
+        burned_chain = chain[burn:, :-4]
+
         print("Saving plots...")
         for i in range(ndim):
             plt.subplot(ndim, 1, i + 1)
