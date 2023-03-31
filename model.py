@@ -18,7 +18,6 @@ def model_gwecc_1psr(
     wn_vary=False,
     wn_include_ecorr=True,
     wn_normal_efac=True,
-    rn_vary=True,
     rn_components=30,
     ecw_param_dict={},
 ):
