@@ -103,54 +103,55 @@ def main():
     burn = int(chain.shape[0] * burnin_fraction)
     burned_chain = chain[burn:, :-4]
 
-    print("Saving plots...")
-    for i in range(ndim):
-        plt.subplot(ndim, 1, i + 1)
-        param_name = pta.param_names[i]
-        plt.plot(burned_chain[:, i])
-        # plt.axhline(true_params[param_name], c="k")
-        plt.ylabel(param_name)
-    plt.savefig(f"{outdir}/chains.pdf")
+    if settings["run_sampler"]:
+        print("Saving plots...")
+        for i in range(ndim):
+            plt.subplot(ndim, 1, i + 1)
+            param_name = pta.param_names[i]
+            plt.plot(burned_chain[:, i])
+            # plt.axhline(true_params[param_name], c="k")
+            plt.ylabel(param_name)
+        plt.savefig(f"{outdir}/chains.pdf")
 
-    corner.corner(burned_chain, labels=pta.param_names)
-    plt.savefig(f"{outdir}/corner.pdf")
+        corner.corner(burned_chain, labels=pta.param_names)
+        plt.savefig(f"{outdir}/corner.pdf")
 
-    if not settings["noise_only"]:
-        plt.clf()
-        plot_upper_limit(
-            pta.param_names,
-            burned_chain,
-            "gwecc_log10_F",
-            "$\\log_{10} f_{gw}$ (Hz)",
-            (-9, -7),
-            xparam_bins=16,
-            quantile=0.95,
-        )
-        plt.savefig(f"{outdir}/upper_limit_freq.pdf")
+        if not settings["noise_only"]:
+            plt.clf()
+            plot_upper_limit(
+                pta.param_names,
+                burned_chain,
+                "gwecc_log10_F",
+                "$\\log_{10} f_{gw}$ (Hz)",
+                (-9, -7),
+                xparam_bins=16,
+                quantile=0.95,
+            )
+            plt.savefig(f"{outdir}/upper_limit_freq.pdf")
 
-        plt.clf()
-        plot_upper_limit(
-            pta.param_names,
-            burned_chain,
-            "gwecc_log10_M",
-            "$\\log_{10} M$ (Msun)",
-            (6, 9),
-            xparam_bins=8,
-            quantile=0.95,
-        )
-        plt.savefig(f"{outdir}/upper_limit_mass.pdf")
+            plt.clf()
+            plot_upper_limit(
+                pta.param_names,
+                burned_chain,
+                "gwecc_log10_M",
+                "$\\log_{10} M$ (Msun)",
+                (6, 9),
+                xparam_bins=8,
+                quantile=0.95,
+            )
+            plt.savefig(f"{outdir}/upper_limit_mass.pdf")
 
-        plt.clf()
-        plot_upper_limit(
-            pta.param_names,
-            burned_chain,
-            "gwecc_e0",
-            "$e_0$",
-            (0.01, 0.8),
-            xparam_bins=8,
-            quantile=0.95,
-        )
-        plt.savefig(f"{outdir}/upper_limit_ecc.pdf")
+            plt.clf()
+            plot_upper_limit(
+                pta.param_names,
+                burned_chain,
+                "gwecc_e0",
+                "$e_0$",
+                (0.01, 0.8),
+                xparam_bins=8,
+                quantile=0.95,
+            )
+            plt.savefig(f"{outdir}/upper_limit_ecc.pdf")
 
     print("Done.")
 

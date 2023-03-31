@@ -12,5 +12,6 @@
     "ecw_spline": true,
     "output_prefix": "chains",
     "ptmcmc_niter": 20000000,
-    "ptmcmc_burnin_fraction": 0.20
+    "ptmcmc_burnin_fraction": 0.20,
+    "run_sampler": true
 }
