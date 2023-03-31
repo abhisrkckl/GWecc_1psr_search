@@ -8,7 +8,7 @@ import numpy as np
 from enterprise.pulsar import PintPulsar, Pulsar
 from enterprise.signals.signal_base import PTA
 from enterprise_extensions import models
-from enterprise_gwecc import gwecc_1psr_block
+
 from model import model_gwecc_1psr
 
 
@@ -78,7 +78,12 @@ def read_psr(datadir: str, parfile: str, timfile: str) -> PintPulsar:
 
 def verify_noise_dict(psr: PintPulsar, noise_dict: dict):
     model = models.model_singlepsr_noise(
-        psr, white_vary=True, red_var=True, noisedict=noise_dict, psr_model=True, tm_marg=True
+        psr,
+        white_vary=True,
+        red_var=True,
+        noisedict=noise_dict,
+        psr_model=True,
+        tm_marg=True,
     )
     pta = PTA([model(psr)])
     assert set(pta.param_names) == set(noise_dict.keys())
@@ -102,9 +107,9 @@ def get_pta(psr, noise_dict, ecw_param_dict, noise_only=False) -> PTA:
         noise_only=noise_only,
         wn_vary=False,
         rn_components=30,
-        ecw_param_dict=ecw_param_dict
+        ecw_param_dict=ecw_param_dict,
     )
-    
+
     # model = models.model_singlepsr_noise(
     #     psr,
     #     white_vary=False,
@@ -142,5 +147,3 @@ def get_deltap_max(psr):
     sigma_Dp = psr.pdist[1]
     Dp_max = Dp + sigma_Dp
     return (Dp_max * u.Unit("kpc") / c.c).to("year").value
-
-
