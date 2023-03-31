@@ -55,7 +55,9 @@ def main():
 
     # Make sure that the PTA object works.
     # This also triggers JIT compilation of julia code and the caching of ENTERPRISE computations.
+    print("Testing likelihood and prior...")
     x0 = np.array([p.sample() for p in pta.params])
+    print("Log-prior at", x0, "is", pta.get_lnprior(x0))
     print("Log-likelihood at", x0, "is", pta.get_lnlikelihood(x0))
 
     output_prefix = settings["output_prefix"]
