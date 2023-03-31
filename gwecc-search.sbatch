@@ -6,7 +6,7 @@
 
 module load pkgsrc/2022Q2
 
-/home/susobhan/Data/susobhan/miniconda/envs/gwecc/bin/activate
+/home/susobhan/Data/susobhan/miniconda/envs/gwecc1/bin/activate
 
 PYTHON=$CONDA_PREFIX/bin/python
 JULIA=$CONDA_PREFIX/bin/julia
