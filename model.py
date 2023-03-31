@@ -6,7 +6,7 @@ from enterprise.signals.utils import powerlaw
 
 def powerlaw_red_noise_block(vary=True, components=30):
     log10_A = Uniform(-20, -11)
-    gamma = Uniform(0, 10)
+    gamma = Uniform(0, 15)
     pl = powerlaw(log10_A=log10_A, gamma=gamma)   
     
     return FourierBasisGP(pl, components=components, Tspan=None)

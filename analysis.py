@@ -100,7 +100,7 @@ def get_pta(psr, noise_dict, ecw_param_dict, noise_only=False) -> PTA:
 
     model = model_gwecc_1psr(
         noise_only=noise_only,
-        wn_vary=False,
+        wn_vary=True,
         rn_components=30,
         ecw_param_dict=ecw_param_dict
     )

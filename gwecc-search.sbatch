@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --ntasks=4
-#SBATCH --mem=32G
+#SBATCH --mem=20G
 
 /home/susobhan/Data/susobhan/miniconda/envs/gwecc/bin/activate
 

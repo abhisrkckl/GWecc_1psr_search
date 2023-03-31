@@ -1,5 +1,5 @@
 {
-    "description" : "Noise only run",
+    "description" : "Longer chain",
     "data_dir" : "data",
     "par_file" : "J1909-3744_NANOGrav_12yv4.gls.par",
     "tim_file" : "J1909-3744_NANOGrav_12yv4.tim",
@@ -11,6 +11,6 @@
     "ecw_psrTerm": false,
     "ecw_spline": true,
     "output_prefix": "chains",
-    "ptmcmc_niter": 5000000,
-    "ptmcmc_burnin_fraction": 0.25
+    "ptmcmc_niter": 20000000,
+    "ptmcmc_burnin_fraction": 0.20
 }
