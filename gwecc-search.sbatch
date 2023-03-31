@@ -4,7 +4,7 @@
 #SBATCH --mem=20G
 #SBATCH --job-name=gwecc-search
 
-module load pkgsrc/2022Q2
+# module load pkgsrc/2022Q2
 
 /home/susobhan/Data/susobhan/miniconda/envs/gwecc1/bin/activate
 
