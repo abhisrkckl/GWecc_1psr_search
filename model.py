@@ -30,7 +30,7 @@ def model_gwecc_1psr(
         tnequad=False,
         efac1=wn_normal_efac,
     )
-    rn = powerlaw_red_noise_block(vary=rn_vary, components=rn_components)
+    rn = powerlaw_red_noise_block(components=rn_components)
 
     if noise_only:
         return tm + wn + rn
