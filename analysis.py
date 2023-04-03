@@ -100,13 +100,14 @@ def read_data(data_dir: str, par_file: str, tim_file: str, noise_dict_file: str)
     return psr, noise_dict
 
 
-def get_pta(psr, noise_dict, ecw_param_dict, noise_only=False) -> PTA:
+def get_pta(psr, noise_dict, ecw_param_dict, noise_only=False, wn_vary=False, wn_normal_efac=False, rn_components=30) -> PTA:
     verify_noise_dict(psr, noise_dict)
 
     model = model_gwecc_1psr(
         noise_only=noise_only,
-        wn_vary=True,
-        rn_components=30,
+        wn_vary=wn_vary,
+        wn_normal_efac=wn_normal_efac,
+        rn_components=rn_components,
         ecw_param_dict=ecw_param_dict,
     )
 

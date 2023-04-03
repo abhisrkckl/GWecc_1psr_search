@@ -50,7 +50,14 @@ def main():
     ecw_params.update(settings["ecw_frozen_params"])
 
     # vary_red_noise = settings["vary_red_noise"]
-    pta = get_pta(psr, noise_dict, ecw_params, noise_only=settings["noise_only"])
+    pta = get_pta(
+        psr, 
+        noise_dict, 
+        ecw_params, 
+        noise_only=settings["noise_only"],
+        wn_vary=False,
+        rn_components=30    
+    )
     print("Free parameters :", pta.param_names)
 
     # Make sure that the PTA object works.

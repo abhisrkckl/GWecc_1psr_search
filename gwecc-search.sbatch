@@ -22,7 +22,7 @@ $PYTHON -c 'import matplotlib as mpl; print("matplotlib version", mpl.__version_
 $PYTHON -c 'import corner; print("corner version", corner.__version__)'
 $PYTHON -c 'import pint; print("PINT version", pint.__version__)'
 echo tempo2 version is `tempo2 -v`
-$PYTHON -c 'import libstempo; print("libstempo version", libstempo.__version__)'
+$PYTHON -c 'import libstempo; print("libstempo version", libstempo.__version__)' 2> /dev/null
 $PYTHON -c 'import enterprise; print("ENTERPRISE version", enterprise.__version__)'
 $PYTHON -c 'import enterprise_extensions; print("enterprise_extensions version", enterprise_extensions.__version__)'
 $PYTHON -c 'import PTMCMCSampler; print("PTMCMCSampler version", PTMCMCSampler.__version__)' | grep version
