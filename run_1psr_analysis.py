@@ -55,8 +55,8 @@ def main():
         noise_dict, 
         ecw_params, 
         noise_only=settings["noise_only"],
-        wn_vary=False,
-        rn_components=30    
+        wn_vary=settings["white_noise_vary"],
+        rn_components=settings["red_noise_nharms"]
     )
     print("Free parameters :", pta.param_names)
 
