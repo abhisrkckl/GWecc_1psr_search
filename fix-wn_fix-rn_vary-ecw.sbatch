@@ -17,4 +17,4 @@ source print_info.sh
 
 echo
 
-$PYTHON run_1psr_analysis.py fix-wn_fix-rn_vary-ecw.json --no-sampler
+$PYTHON run_1psr_analysis.py fix-wn_fix-rn_vary-ecw.json
