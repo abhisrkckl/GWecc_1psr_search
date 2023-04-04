@@ -6,16 +6,15 @@
     "ecw_name": "gwecc",
     "white_noise_vary": false,
     "white_noise_normal": false,
-    "red_noise_vary": true,
+    "red_noise_vary": false,
     "red_noise_nharms": 30,
-    "noise_only": false,
+    "noise_only": true,
     "ecw_frozen_params": { },
     "ecw_psrTerm": true,
     "ecw_spline": true,
     "output_prefix": "chains",
-    "ptmcmc_niter": 600000,
+    "ptmcmc_niter": 800000,
     "ptmcmc_burnin_fraction": 0.20,
     "run_sampler": false,
     "create_plots": false
-
 }
