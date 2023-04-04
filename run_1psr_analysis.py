@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import platform
 from datetime import datetime
 
 import corner
@@ -51,13 +52,13 @@ def main():
 
     # vary_red_noise = settings["vary_red_noise"]
     pta = get_pta(
-        psr, 
-        noise_dict, 
-        ecw_params, 
+        psr,
+        noise_dict,
+        ecw_params,
         noise_only=settings["noise_only"],
         wn_vary=settings["white_noise_vary"],
         rn_vary=settings["red_noise_vary"],
-        rn_components=settings["red_noise_nharms"]
+        rn_components=settings["red_noise_nharms"],
     )
     print("Free parameters :", pta.param_names)
 
@@ -76,94 +77,94 @@ def main():
         print(f"Creating output dir {outdir}...")
         os.mkdir(outdir)
 
-    summary = settings | {
-        "output_dir": outdir,
-        "pta_free_params": pta.param_names,
-        "slurm_job_id": os.environ["SLURM_JOB_ID"],
-    }
+    summary = (
+        {
+            "user": os.environ["USER"],
+            "os": platform.platform(),
+            "machine": platform.node(),
+            "slurm_job_id": os.environ["SLURM_JOB_ID"]
+            if "SLURM_JOB_ID" in os.environ
+            else "",
+        }
+        | settings
+        | {
+            "output_dir": outdir,
+            "pta_param_summary": get_pta_param_summary(pta),
+        }
+    )
     with open(f"{outdir}/summary.json", "w") as summarypkl:
         print("Saving summary...")
         json.dump(summary, summarypkl, indent=4)
 
     if settings["run_sampler"]:
-        ndim = len(x0)
-        cov = np.diag(np.ones(ndim) * 0.01**2)
-        Niter = settings["ptmcmc_niter"]
-        x0 = np.hstack(x0)
-        print("Starting sampler...\n")
-        sampler = ptmcmc(
-            ndim,
-            pta.get_lnlikelihood,
-            pta.get_lnprior,
-            cov,
-            outDir=outdir,
-            resume=False,
-            verbose=True,
-        )
-        # This sometimes fails if the acor package is installed, but works otherwise.
-        # I don't know why.
-        sampler.sample(x0, Niter)
+
+        run_ptmcmc(pta, settings["ptmcmc_niter"], outdir)
 
         print("")
 
-        chain_file = f"{outdir}/chain_1.txt"
-        chain = np.loadtxt(chain_file)
-        print("Chain shape :", chain.shape)
+        burned_chain = read_ptmcmc_chain(outdir, settings["ptmcmc_burnin_fraction"])
 
-        burnin_fraction = settings["ptmcmc_burnin_fraction"]
-        burn = int(chain.shape[0] * burnin_fraction)
-        burned_chain = chain[burn:, :-4]
+        if settings["create_plots"]:
+            print("Saving plots...")
 
-        print("Saving plots...")
-        for i in range(ndim):
-            plt.subplot(ndim, 1, i + 1)
-            param_name = pta.param_names[i]
-            plt.plot(burned_chain[:, i])
-            # plt.axhline(true_params[param_name], c="k")
-            plt.ylabel(param_name)
-        plt.savefig(f"{outdir}/chains.pdf")
+            ndim = burned_chain.shape[1]
 
-        corner.corner(burned_chain, labels=pta.param_names)
-        plt.savefig(f"{outdir}/corner.pdf")
+            for i in range(ndim):
+                plt.subplot(ndim, 1, i + 1)
+                param_name = pta.param_names[i]
+                plt.plot(burned_chain[:, i])
+                # plt.axhline(true_params[param_name], c="k")
+                plt.ylabel(param_name)
+            plt.savefig(f"{outdir}/chains.pdf")
 
-        if not settings["noise_only"]:
-            plt.clf()
-            plot_upper_limit(
-                pta.param_names,
-                burned_chain,
-                "gwecc_log10_F",
-                "$\\log_{10} f_{gw}$ (Hz)",
-                (-9, -7),
-                xparam_bins=16,
-                quantile=0.95,
-            )
-            plt.savefig(f"{outdir}/upper_limit_freq.pdf")
+            corner.corner(burned_chain, labels=pta.param_names)
+            plt.savefig(f"{outdir}/corner.pdf")
 
-            plt.clf()
-            plot_upper_limit(
-                pta.param_names,
-                burned_chain,
-                "gwecc_log10_M",
-                "$\\log_{10} M$ (Msun)",
-                (6, 9),
-                xparam_bins=8,
-                quantile=0.95,
-            )
-            plt.savefig(f"{outdir}/upper_limit_mass.pdf")
+            if not settings["noise_only"]:
+                plt.clf()
+                plot_upper_limit(
+                    pta.param_names,
+                    burned_chain,
+                    "gwecc_log10_F",
+                    "$\\log_{10} f_{gw}$ (Hz)",
+                    (-9, -7),
+                    xparam_bins=16,
+                    quantile=0.95,
+                )
+                plt.savefig(f"{outdir}/upper_limit_freq.pdf")
 
-            plt.clf()
-            plot_upper_limit(
-                pta.param_names,
-                burned_chain,
-                "gwecc_e0",
-                "$e_0$",
-                (0.01, 0.8),
-                xparam_bins=8,
-                quantile=0.95,
-            )
-            plt.savefig(f"{outdir}/upper_limit_ecc.pdf")
+                plt.clf()
+                plot_upper_limit(
+                    pta.param_names,
+                    burned_chain,
+                    "gwecc_log10_M",
+                    "$\\log_{10} M$ (Msun)",
+                    (6, 9),
+                    xparam_bins=8,
+                    quantile=0.95,
+                )
+                plt.savefig(f"{outdir}/upper_limit_mass.pdf")
+
+                plt.clf()
+                plot_upper_limit(
+                    pta.param_names,
+                    burned_chain,
+                    "gwecc_e0",
+                    "$e_0$",
+                    (0.01, 0.8),
+                    xparam_bins=8,
+                    quantile=0.95,
+                )
+                plt.savefig(f"{outdir}/upper_limit_ecc.pdf")
 
     print("Done.")
+
+
+def get_pta_param_summary(pta):
+    def get_prior_summary(param):
+        return {"type": param.type, "kwargs": param.prior.func_kwargs}
+
+    return {par.name: get_prior_summary(par) for par in pta.params}
 
 
 def plot_upper_limit(
@@ -200,6 +201,37 @@ def plot_upper_limit(
     plt.axhline(log10_A_quant, color="grey")
     plt.xlabel(xparam_label)
     plt.ylabel(f"{int(100*quantile)}%" + " upper bound on $\\log_{10} \\zeta_0$ (s)")
+
+
+def run_ptmcmc(pta, Niter, outdir):
+    x0 = np.array([p.sample() for p in pta.params])
+    ndim = len(x0)
+    cov = np.diag(np.ones(ndim) * 0.01**2)
+    x0 = np.hstack(x0)
+
+    print("Starting sampler...\n")
+    sampler = ptmcmc(
+        ndim,
+        pta.get_lnlikelihood,
+        pta.get_lnprior,
+        cov,
+        outDir=outdir,
+        resume=False,
+        verbose=True,
+    )
+    # This sometimes fails if the acor package is installed, but works otherwise.
+    # I don't know why.
+    sampler.sample(x0, Niter)
+
+
+def read_ptmcmc_chain(outdir, burnin_fraction):
+    chain_file = f"{outdir}/chain_1.txt"
+    chain = np.loadtxt(chain_file)
+    print("Chain shape :", chain.shape)
+
+    # burnin_fraction = settings["ptmcmc_burnin_fraction"]
+    burn = int(chain.shape[0] * burnin_fraction)
+    return chain[burn:, :-4]
 
 
 if __name__ == "__main__":

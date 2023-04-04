@@ -9,3 +9,6 @@ jumps.txt
 chains*
 *.out
 *.bak
+corner.pdf
+summary.json
+*limit*.pdf

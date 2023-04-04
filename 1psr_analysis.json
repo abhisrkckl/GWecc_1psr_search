@@ -1,5 +1,4 @@
 {
-    "description" : "Full analysis",
     "data_dir" : "data",
     "par_file" : "J1909-3744_NANOGrav_12yv4.gls.par",
     "tim_file" : "J1909-3744_NANOGrav_12yv4.tim",
@@ -16,5 +15,7 @@
     "output_prefix": "chains",
     "ptmcmc_niter": 600000,
     "ptmcmc_burnin_fraction": 0.20,
-    "run_sampler": true
+    "run_sampler": false,
+    "create_plots": false
+
 }
