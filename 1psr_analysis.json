@@ -7,6 +7,7 @@
     "ecw_name": "gwecc",
     "white_noise_vary": false,
     "white_noise_normal": false,
+    "red_noise_vary": true,
     "red_noise_nharms": 30,
     "noise_only": false,
     "ecw_frozen_params": { },

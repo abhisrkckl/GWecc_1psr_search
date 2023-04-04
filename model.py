@@ -1,14 +1,12 @@
 from enterprise.signals.gp_signals import FourierBasisGP, MarginalizingTimingModel
-from enterprise.signals.parameter import Uniform
+from enterprise.signals.parameter import Uniform, Constant
 from enterprise.signals.utils import powerlaw
 from enterprise_extensions.blocks import white_noise_block
 from enterprise_gwecc import gwecc_1psr_block
 
 
-def powerlaw_red_noise_block(components=30):
-    log10_A = Uniform(-20, -11)
-    gamma = Uniform(0, 15)
-    pl = powerlaw(log10_A=log10_A, gamma=gamma)   
+def powerlaw_red_noise_block(components=30, vary=True, log10_A=Uniform(-20, -11), gamma=Uniform(0, 15)):
+    pl = powerlaw(log10_A=log10_A, gamma=gamma)  if vary else powerlaw(log10_A=Constant(), gamma=Constant())
     return FourierBasisGP(pl, components=components, Tspan=None)
 
 
@@ -18,6 +16,7 @@ def model_gwecc_1psr(
     wn_vary=False,
     wn_include_ecorr=True,
     wn_normal_efac=True,
+    rn_vary=True,
     rn_components=30,
     ecw_param_dict={},
 ):
@@ -29,7 +28,7 @@ def model_gwecc_1psr(
         tnequad=False,
         efac1=wn_normal_efac,
     )
-    rn = powerlaw_red_noise_block(components=rn_components)
+    rn = powerlaw_red_noise_block(components=rn_components, vary=rn_vary)
 
     if noise_only:
         return tm + wn + rn
