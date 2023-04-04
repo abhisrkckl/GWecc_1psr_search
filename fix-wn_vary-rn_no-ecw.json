@@ -16,5 +16,6 @@
     "ptmcmc_niter": 200000,
     "ptmcmc_burnin_fraction": 0.25,
     "run_sampler": true,
+    "sampler": "ptmcmc",
     "create_plots": true
 }

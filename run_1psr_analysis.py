@@ -6,11 +6,14 @@ from datetime import datetime
 
 import corner
 import numpy as np
+import pickle
+from dynesty import DynamicNestedSampler
+from dynesty.results import print_fn as dynesty_print_fn
 from enterprise.signals.parameter import Uniform
 from matplotlib import pyplot as plt
 from PTMCMCSampler.PTMCMCSampler import PTSampler as ptmcmc
 
-from analysis import get_deltap_max, get_pta, read_data
+from analysis import get_deltap_max, get_pta, read_data, prior_transform_fn
 
 
 def main():
@@ -101,11 +104,13 @@ def main():
 
     if settings["run_sampler"]:
 
-        run_ptmcmc(pta, settings["ptmcmc_niter"], outdir)
+        if settings["sampler"] == "ptmcmc":
+            run_ptmcmc(pta, settings["ptmcmc_niter"], outdir)
+            burned_chain = read_ptmcmc_chain(outdir, settings["ptmcmc_burnin_fraction"])
+        elif settings["sampler"] == "dynesty":
+            burned_chain = run_dynesty(pta, outdir)
 
         print("")
-
-        burned_chain = read_ptmcmc_chain(outdir, settings["ptmcmc_burnin_fraction"])
 
         if settings["create_plots"]:
             print("Saving plots...")
@@ -235,6 +240,28 @@ def read_ptmcmc_chain(outdir, burnin_fraction):
     # burnin_fraction = settings["ptmcmc_burnin_fraction"]
     burn = int(chain.shape[0] * burnin_fraction)
     return chain[burn:, :-4]
+
+def print_dynesty_progress(
+    results,
+    niter,
+    ncall,
+    **kwargs,
+):
+    if niter % 1000 == 0:
+        dynesty_print_fn(results, niter, ncall, **kwargs)
+
+def run_dynesty(pta, outdir):
+    prior_transform = prior_transform_fn(pta)
+    ndim = len(pta.param_names)
+    sampler = DynamicNestedSampler(pta.get_lnlikelihood, prior_transform, ndim, nlive=1000)
+    sampler.run_nested(dlogz=0.1, print_progress=True, print_func=print_dynesty_progress)
+    res = sampler.results
+
+    result_pkl = f"{outdir}/dynesty_result.pkl"
+    with open(result_pkl, "wb") as respkl:
+        pickle.dump(respkl)
+    
+    return res.samples_equal()
 
 
 if __name__ == "__main__":
