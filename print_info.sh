@@ -1,4 +1,4 @@
-echo Script executed by `whoami` at `date`
+echo Script executed by `whoami` at `date` in `hostname`
 $PYTHON --version
 $CONDA_EXE --version
 echo The conda environment is $CONDA_PREFIX
