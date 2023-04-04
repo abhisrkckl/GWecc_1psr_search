@@ -18,6 +18,9 @@ def main():
     with open(settings_file, "r") as sf:
         settings = json.load(sf)
 
+    if "--no-sampler" in sys.argv:
+        settings["run_sampler"] = False
+
     data_dir = settings["data_dir"]
     par_file = settings["par_file"]
     tim_file = settings["tim_file"]
