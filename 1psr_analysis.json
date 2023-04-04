@@ -13,7 +13,7 @@
     "ecw_psrTerm": true,
     "ecw_spline": true,
     "output_prefix": "chains",
-    "ptmcmc_niter": 200000,
+    "ptmcmc_niter": 600000,
     "ptmcmc_burnin_fraction": 0.20,
     "run_sampler": true
 }

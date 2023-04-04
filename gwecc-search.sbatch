@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#SBATCH --ntasks=4
-#SBATCH --mem=20G
+#SBATCH --ntasks=1
+#SBATCH --mem=24G
 #SBATCH --job-name=gwecc-search
 
 # module load pkgsrc/2022Q2
 
-/home/susobhan/Data/susobhan/miniconda/envs/gwecc1/bin/activate
+/home/susobhan/Data/susobhan/miniconda/envs/gwecc/bin/activate
 
 PYTHON=$CONDA_PREFIX/bin/python
 JULIA=$CONDA_PREFIX/bin/julia
