@@ -259,7 +259,7 @@ def run_dynesty(pta, outdir):
 
     result_pkl = f"{outdir}/dynesty_result.pkl"
     with open(result_pkl, "wb") as respkl:
-        pickle.dump(respkl)
+        pickle.dump(res, respkl)
     
     return res.samples_equal()
 
