@@ -254,7 +254,7 @@ def run_dynesty(pta, outdir):
     prior_transform = prior_transform_fn(pta)
     ndim = len(pta.param_names)
     sampler = DynamicNestedSampler(pta.get_lnlikelihood, prior_transform, ndim, nlive=1000)
-    sampler.run_nested(dlogz=0.1, print_progress=True, print_func=print_dynesty_progress)
+    sampler.run_nested(dlogz_init=0.1, print_progress=True, print_func=print_dynesty_progress)
     res = sampler.results
 
     result_pkl = f"{outdir}/dynesty_result.pkl"
