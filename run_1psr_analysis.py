@@ -12,7 +12,8 @@ from dynesty.results import print_fn as dynesty_print_fn
 from enterprise.signals.parameter import Uniform
 from matplotlib import pyplot as plt
 from PTMCMCSampler.PTMCMCSampler import PTSampler as ptmcmc
-from enterprise_extensions.sampler import JumpProposal, setup_sampler
+from enterprise_extensions.sampler import JumpProposal
+from enterprise_extensions.empirical_distr import EmpiricalDistribution2DKDE
 
 from analysis import get_deltap_max, get_pta, read_data, prior_transform_fn
 
@@ -76,7 +77,8 @@ def main():
     if settings["run_sampler"]:
 
         if settings["sampler"] == "ptmcmc":
-            run_ptmcmc(pta, settings["ptmcmc_niter"], outdir, groups=[red_noise_group])
+            rn_ed = create_red_noise_empirical_distr(psr, "data/red_noise_empdist_samples.dat")
+            run_ptmcmc(pta, settings["ptmcmc_niter"], outdir, groups=[red_noise_group], empdist=rn_ed)
             burned_chain = read_ptmcmc_chain(outdir, settings["ptmcmc_burnin_fraction"])
         elif settings["sampler"] == "dynesty":
             burned_chain = run_dynesty(pta, outdir)
@@ -179,7 +181,7 @@ def plot_upper_limit(
     plt.ylabel(f"{int(100*quantile)}%" + " upper bound on $\\log_{10} \\zeta_0$ (s)")
 
 
-def run_ptmcmc(pta, Niter, outdir, groups=None):
+def run_ptmcmc(pta, Niter, outdir, groups=None, empdist=None):
     x0 = np.array([p.sample() for p in pta.params])
     ndim = len(x0)
     cov = np.diag(np.ones(ndim) * 0.01**2)
@@ -187,7 +189,7 @@ def run_ptmcmc(pta, Niter, outdir, groups=None):
 
     print("Starting sampler...\n")
 
-    jp = JumpProposal(pta)
+    jp = JumpProposal(pta, empirical_distr=empdist)
 
     sampler = ptmcmc(
         ndim,
@@ -200,6 +202,7 @@ def run_ptmcmc(pta, Niter, outdir, groups=None):
         verbose=True,
     )
     sampler.addProposalToCycle(jp.draw_from_prior, 20)
+    sampler.addProposalToCycle(jp.draw_from_empirical_distr, 20)
 
     # This sometimes fails if the acor package is installed, but works otherwise.
     # I don't know why.
@@ -282,6 +285,13 @@ def get_ecw_params(psr, settings):
     ecw_params.update(settings["ecw_frozen_params"])
 
     return ecw_params
+
+def create_red_noise_empirical_distr(psr, chain_file):
+    samples = np.genfromtxt(chain_file).T
+    param_names = [f"{psr.name}_red_noise_gamma", f"{psr.name}_red_noise_log10_A"]
+    return EmpiricalDistribution2DKDE(
+        param_names, samples, minvals=[0, -20], maxvals=[15, -11]
+    )
 
 if __name__ == "__main__":
     main()
