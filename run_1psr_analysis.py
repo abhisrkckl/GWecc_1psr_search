@@ -290,8 +290,10 @@ def create_red_noise_empirical_distr(psr, chain_file):
     samples = np.genfromtxt(chain_file)
     param_names = [f"{psr.name}_red_noise_gamma", f"{psr.name}_red_noise_log10_A"]
     
+    gamma_bins = np.linspace(0, 15, 25)
+    log10_A_bins = np.linspace(-20, -11, 25)
     return EmpiricalDistribution2D(
-        param_names, samples, bins=[24, 24]
+        param_names, samples, bins=[gamma_bins, log10_A_bins]
     )
 
 if __name__ == "__main__":
