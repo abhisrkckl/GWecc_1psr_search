@@ -78,7 +78,7 @@ def main():
 
         if settings["sampler"] == "ptmcmc":
             rn_ed = create_red_noise_empirical_distr(psr, "data/red_noise_empdist_samples.dat")
-            run_ptmcmc(pta, settings["ptmcmc_niter"], outdir, groups=[red_noise_group], empdist=rn_ed)
+            run_ptmcmc(pta, settings["ptmcmc_niter"], outdir, groups=[red_noise_group], empdist=[rn_ed])
             burned_chain = read_ptmcmc_chain(outdir, settings["ptmcmc_burnin_fraction"])
         elif settings["sampler"] == "dynesty":
             burned_chain = run_dynesty(pta, outdir)
