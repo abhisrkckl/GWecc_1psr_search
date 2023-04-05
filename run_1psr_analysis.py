@@ -12,6 +12,7 @@ from dynesty.results import print_fn as dynesty_print_fn
 from enterprise.signals.parameter import Uniform
 from matplotlib import pyplot as plt
 from PTMCMCSampler.PTMCMCSampler import PTSampler as ptmcmc
+from enterprise_extensions.sampler import JumpProposal, setup_sampler
 
 from analysis import get_deltap_max, get_pta, read_data, prior_transform_fn
 
@@ -36,25 +37,7 @@ def main():
         noise_file,
     )
 
-    name = settings["ecw_name"]
-
-    tref = max(psr.toas)
-    deltap_max = get_deltap_max(psr)
-    ecw_params = {
-        "sigma": Uniform(0, np.pi)(f"{name}_sigma"),
-        "rho": Uniform(-np.pi, np.pi)(f"{name}_rho"),
-        "log10_M": Uniform(6, 9)(f"{name}_log10_M"),
-        "eta": Uniform(0, 0.25)(f"{name}_eta"),
-        "log10_F": Uniform(-9, -7)(f"{name}_log10_F"),
-        "e0": Uniform(0.01, 0.8)(f"{name}_e0"),
-        "l0": Uniform(-np.pi, np.pi)(f"{name}_l0"),
-        "tref": tref,
-        "log10_A": Uniform(-11, -5)(f"{name}_log10_A"),
-        "deltap": Uniform(0, deltap_max),
-        "psrTerm": settings["ecw_psrTerm"],
-        "spline": settings["ecw_spline"],
-    }
-    ecw_params.update(settings["ecw_frozen_params"])
+    ecw_params = get_ecw_params(psr, settings)
 
     # vary_red_noise = settings["vary_red_noise"]
     pta = get_pta(
@@ -67,6 +50,8 @@ def main():
         rn_components=settings["red_noise_nharms"],
     )
     print("Free parameters :", pta.param_names)
+
+    red_noise_group = [pta.param_names.index(f"{psr.name}_red_noise_gamma"), pta.param_names.index(f"{psr.name}_red_noise_log10_A")]
 
     # Make sure that the PTA object works.
     # This also triggers JIT compilation of julia code and the caching of ENTERPRISE computations.
@@ -83,21 +68,7 @@ def main():
         print(f"Creating output dir {outdir}...")
         os.mkdir(outdir)
 
-    summary = (
-        {
-            "user": os.environ["USER"],
-            "os": platform.platform(),
-            "machine": platform.node(),
-            "slurm_job_id": os.environ["SLURM_JOB_ID"]
-            if "SLURM_JOB_ID" in os.environ
-            else "",
-        }
-        | settings
-        | {
-            "output_dir": outdir,
-            "pta_param_summary": get_pta_param_summary(pta),
-        }
-    )
+    summary = get_summary(pta, outdir, settings)
     with open(f"{outdir}/summary.json", "w") as summarypkl:
         print("Saving summary...")
         json.dump(summary, summarypkl, indent=4)
@@ -105,7 +76,7 @@ def main():
     if settings["run_sampler"]:
 
         if settings["sampler"] == "ptmcmc":
-            run_ptmcmc(pta, settings["ptmcmc_niter"], outdir)
+            run_ptmcmc(pta, settings["ptmcmc_niter"], outdir, groups=[red_noise_group])
             burned_chain = read_ptmcmc_chain(outdir, settings["ptmcmc_burnin_fraction"])
         elif settings["sampler"] == "dynesty":
             burned_chain = run_dynesty(pta, outdir)
@@ -129,41 +100,38 @@ def main():
             plt.savefig(f"{outdir}/corner.pdf")
 
             if not settings["noise_only"]:
-                plt.clf()
-                plot_upper_limit(
-                    pta.param_names,
-                    burned_chain,
-                    "gwecc_log10_F",
+                plot_param_names = ["gwecc_log10_F", "gwecc_log10_M", "gwecc_e0"]
+                plot_param_pltlbl = [
                     "$\\log_{10} f_{gw}$ (Hz)",
-                    (-9, -7),
-                    xparam_bins=16,
-                    quantile=0.95,
-                )
-                plt.savefig(f"{outdir}/upper_limit_freq.pdf")
-
-                plt.clf()
-                plot_upper_limit(
-                    pta.param_names,
-                    burned_chain,
-                    "gwecc_log10_M",
                     "$\\log_{10} M$ (Msun)",
-                    (6, 9),
-                    xparam_bins=8,
-                    quantile=0.95,
-                )
-                plt.savefig(f"{outdir}/upper_limit_mass.pdf")
-
-                plt.clf()
-                plot_upper_limit(
-                    pta.param_names,
-                    burned_chain,
-                    "gwecc_e0",
                     "$e_0$",
-                    (0.01, 0.8),
-                    xparam_bins=8,
-                    quantile=0.95,
-                )
-                plt.savefig(f"{outdir}/upper_limit_ecc.pdf")
+                ]
+                plot_param_lims = [(-9, -7), (6, 9), (0.01, 0.8)]
+                plot_param_nbins = [16, 8, 8]
+                plot_savefiles = [
+                    "upper_limit_freq.pdf",
+                    "upper_limit_mass.pdf",
+                    "upper_limit_ecc.pdf",
+                ]
+
+                for pname, pltlbl, plim, pnbin, psavefile in zip(
+                    plot_param_names,
+                    plot_param_pltlbl,
+                    plot_param_lims,
+                    plot_param_nbins,
+                    plot_savefiles,
+                ):
+                    plt.clf()
+                    plot_upper_limit(
+                        pta.param_names,
+                        burned_chain,
+                        pname,
+                        pltlbl,
+                        plim,
+                        xparam_bins=pnbin,
+                        quantile=0.95,
+                    )
+                    plt.savefig(f"{outdir}/{psavefile}")
 
     print("Done.")
 
@@ -211,22 +179,28 @@ def plot_upper_limit(
     plt.ylabel(f"{int(100*quantile)}%" + " upper bound on $\\log_{10} \\zeta_0$ (s)")
 
 
-def run_ptmcmc(pta, Niter, outdir):
+def run_ptmcmc(pta, Niter, outdir, groups=None):
     x0 = np.array([p.sample() for p in pta.params])
     ndim = len(x0)
     cov = np.diag(np.ones(ndim) * 0.01**2)
     x0 = np.hstack(x0)
 
     print("Starting sampler...\n")
+
+    jp = JumpProposal(pta)
+
     sampler = ptmcmc(
         ndim,
         pta.get_lnlikelihood,
         pta.get_lnprior,
         cov,
+        groups=groups,
         outDir=outdir,
         resume=False,
         verbose=True,
     )
+    sampler.addProposalToCycle(jp.draw_from_prior, 20)
+
     # This sometimes fails if the acor package is installed, but works otherwise.
     # I don't know why.
     sampler.sample(x0, Niter)
@@ -241,6 +215,7 @@ def read_ptmcmc_chain(outdir, burnin_fraction):
     burn = int(chain.shape[0] * burnin_fraction)
     return chain[burn:, :-4]
 
+
 def print_dynesty_progress(
     results,
     niter,
@@ -250,19 +225,63 @@ def print_dynesty_progress(
     if niter % 1000 == 0:
         dynesty_print_fn(results, niter, ncall, **kwargs)
 
+
 def run_dynesty(pta, outdir):
     prior_transform = prior_transform_fn(pta)
     ndim = len(pta.param_names)
-    sampler = DynamicNestedSampler(pta.get_lnlikelihood, prior_transform, ndim, nlive=1000)
+    sampler = DynamicNestedSampler(
+        pta.get_lnlikelihood, prior_transform, ndim, nlive=1000
+    )
     sampler.run_nested(print_progress=True, print_func=print_dynesty_progress)
     res = sampler.results
 
     result_pkl = f"{outdir}/dynesty_result.pkl"
     with open(result_pkl, "wb") as respkl:
         pickle.dump(res, respkl)
-    
+
     return res.samples_equal()
 
+
+def get_summary(pta, outdir, settings):
+    return (
+        {
+            "user": os.environ["USER"],
+            "os": platform.platform(),
+            "machine": platform.node(),
+            "slurm_job_id": os.environ["SLURM_JOB_ID"]
+            if "SLURM_JOB_ID" in os.environ
+            else "",
+        }
+        | settings
+        | {
+            "output_dir": outdir,
+            "pta_param_summary": get_pta_param_summary(pta),
+        }
+    )
+
+def get_ecw_params(psr, settings):
+    name = settings["ecw_name"]
+
+    tref = max(psr.toas)
+    deltap_max = get_deltap_max(psr)
+    
+    ecw_params = {
+        "sigma": Uniform(0, np.pi)(f"{name}_sigma"),
+        "rho": Uniform(-np.pi, np.pi)(f"{name}_rho"),
+        "log10_M": Uniform(6, 9)(f"{name}_log10_M"),
+        "eta": Uniform(0, 0.25)(f"{name}_eta"),
+        "log10_F": Uniform(-9, -7)(f"{name}_log10_F"),
+        "e0": Uniform(0.01, 0.8)(f"{name}_e0"),
+        "l0": Uniform(-np.pi, np.pi)(f"{name}_l0"),
+        "tref": tref,
+        "log10_A": Uniform(-11, -5)(f"{name}_log10_A"),
+        "deltap": Uniform(0, deltap_max),
+        "psrTerm": settings["ecw_psrTerm"],
+        "spline": settings["ecw_spline"],
+    }
+    ecw_params.update(settings["ecw_frozen_params"])
+
+    return ecw_params
 
 if __name__ == "__main__":
     main()
