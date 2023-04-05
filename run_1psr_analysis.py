@@ -287,7 +287,7 @@ def get_ecw_params(psr, settings):
     return ecw_params
 
 def create_red_noise_empirical_distr(psr, chain_file):
-    samples = np.genfromtxt(chain_file).T
+    samples = np.genfromtxt(chain_file)
     param_names = [f"{psr.name}_red_noise_gamma", f"{psr.name}_red_noise_log10_A"]
     return EmpiricalDistribution2DKDE(
         param_names, samples, minvals=[0, -20], maxvals=[15, -11]
