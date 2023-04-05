@@ -13,7 +13,7 @@ from enterprise.signals.parameter import Uniform
 from matplotlib import pyplot as plt
 from PTMCMCSampler.PTMCMCSampler import PTSampler as ptmcmc
 from enterprise_extensions.sampler import JumpProposal
-from enterprise_extensions.empirical_distr import EmpiricalDistribution2DKDE
+from enterprise_extensions.empirical_distr import EmpiricalDistribution2D
 
 from analysis import get_deltap_max, get_pta, read_data, prior_transform_fn
 
@@ -289,8 +289,9 @@ def get_ecw_params(psr, settings):
 def create_red_noise_empirical_distr(psr, chain_file):
     samples = np.genfromtxt(chain_file)
     param_names = [f"{psr.name}_red_noise_gamma", f"{psr.name}_red_noise_log10_A"]
-    return EmpiricalDistribution2DKDE(
-        param_names, samples, minvals=[0, -20], maxvals=[15, -11]
+    
+    return EmpiricalDistribution2D(
+        param_names, samples, bins=[24, 24]
     )
 
 if __name__ == "__main__":
