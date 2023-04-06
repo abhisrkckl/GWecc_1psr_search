@@ -6,17 +6,15 @@ from datetime import datetime
 
 import corner
 import numpy as np
-import pickle
-from dynesty import DynamicNestedSampler
-from dynesty.results import print_fn as dynesty_print_fn
-from enterprise.signals.parameter import Uniform
 from matplotlib import pyplot as plt
-from PTMCMCSampler.PTMCMCSampler import PTSampler as ptmcmc
-from enterprise_extensions.sampler import JumpProposal
-from enterprise_extensions.empirical_distr import EmpiricalDistribution2D
 
-from analysis import get_deltap_max, get_pta, read_data, prior_transform_fn
-
+from analysis import (
+    get_ecw_params,
+    get_pta,
+    read_data,
+)
+from plotting import plot_upper_limit
+from sampling import create_red_noise_empirical_distr, run_dynesty, run_ptmcmc, read_ptmcmc_chain
 
 def main():
     settings_file = sys.argv[1]
@@ -52,8 +50,6 @@ def main():
     )
     print("Free parameters :", pta.param_names)
 
-    red_noise_group = [pta.param_names.index(f"{psr.name}_red_noise_gamma"), pta.param_names.index(f"{psr.name}_red_noise_log10_A")]
-
     # Make sure that the PTA object works.
     # This also triggers JIT compilation of julia code and the caching of ENTERPRISE computations.
     print("Testing likelihood and prior...")
@@ -77,8 +73,20 @@ def main():
     if settings["run_sampler"]:
 
         if settings["sampler"] == "ptmcmc":
-            rn_ed = create_red_noise_empirical_distr(psr, "data/red_noise_empdist_samples.dat")
-            run_ptmcmc(pta, settings["ptmcmc_niter"], outdir, groups=[red_noise_group], empdist=[rn_ed])
+            rn_ed = create_red_noise_empirical_distr(
+                psr, "data/red_noise_empdist_samples.dat"
+            )
+            red_noise_group = [
+                pta.param_names.index(f"{psr.name}_red_noise_gamma"),
+                pta.param_names.index(f"{psr.name}_red_noise_log10_A"),
+            ]
+            run_ptmcmc(
+                pta,
+                settings["ptmcmc_niter"],
+                outdir,
+                groups=[red_noise_group],
+                empdist=[rn_ed],
+            )
             burned_chain = read_ptmcmc_chain(outdir, settings["ptmcmc_burnin_fraction"])
         elif settings["sampler"] == "dynesty":
             burned_chain = run_dynesty(pta, outdir)
@@ -145,107 +153,6 @@ def get_pta_param_summary(pta):
     return {par.name: get_prior_summary(par) for par in pta.params}
 
 
-def plot_upper_limit(
-    param_names,
-    chain,
-    xparam_name,
-    xparam_label,
-    xparam_lims,
-    xparam_bins=16,
-    quantile=0.95,
-):
-    ampl_idx = param_names.index("gwecc_log10_A")
-    freq_idx = param_names.index(xparam_name)
-
-    chain_ampl = chain[:, ampl_idx]
-    chain_freq = chain[:, freq_idx]
-
-    log10_F_min, log10_F_max = xparam_lims
-    log10_F_lins = np.linspace(log10_F_min, log10_F_max, xparam_bins + 1)
-    log10_F_mins = log10_F_lins[:-1]
-    log10_F_maxs = log10_F_lins[1:]
-    log10_F_mids = (log10_F_mins + log10_F_maxs) / 2
-
-    log10_A_quant_Fbin = []
-    for log10_fmin, log10_fmax in zip(log10_F_mins, log10_F_maxs):
-        freq_mask = np.logical_and(chain_freq >= log10_fmin, chain_freq < log10_fmax)
-        log10_A_Fbin_data = chain_ampl[freq_mask]
-        log10_A_quant = np.quantile(log10_A_Fbin_data, quantile)
-        log10_A_quant_Fbin.append(log10_A_quant)
-
-    log10_A_quant = np.quantile(chain_ampl, quantile)
-
-    plt.plot(log10_F_mids, log10_A_quant_Fbin)
-    plt.axhline(log10_A_quant, color="grey")
-    plt.xlabel(xparam_label)
-    plt.ylabel(f"{int(100*quantile)}%" + " upper bound on $\\log_{10} \\zeta_0$ (s)")
-
-
-def run_ptmcmc(pta, Niter, outdir, groups=None, empdist=None):
-    x0 = np.array([p.sample() for p in pta.params])
-    ndim = len(x0)
-    cov = np.diag(np.ones(ndim) * 0.01**2)
-    x0 = np.hstack(x0)
-
-    print("Starting sampler...\n")
-
-    jp = JumpProposal(pta, empirical_distr=empdist)
-
-    sampler = ptmcmc(
-        ndim,
-        pta.get_lnlikelihood,
-        pta.get_lnprior,
-        cov,
-        groups=groups,
-        outDir=outdir,
-        resume=False,
-        verbose=True,
-    )
-    gwecc_params = list(filter(lambda par: "gwecc" in par, pta.param_names))
-    sampler.addProposalToCycle(jp.draw_from_par_prior(gwecc_params), 30)
-    sampler.addProposalToCycle(jp.draw_from_empirical_distr, 20)
-    
-    # This sometimes fails if the acor package is installed, but works otherwise.
-    # I don't know why.
-    sampler.sample(x0, Niter)
-
-
-def read_ptmcmc_chain(outdir, burnin_fraction):
-    chain_file = f"{outdir}/chain_1.txt"
-    chain = np.loadtxt(chain_file)
-    print("Chain shape :", chain.shape)
-
-    # burnin_fraction = settings["ptmcmc_burnin_fraction"]
-    burn = int(chain.shape[0] * burnin_fraction)
-    return chain[burn:, :-4]
-
-
-def print_dynesty_progress(
-    results,
-    niter,
-    ncall,
-    **kwargs,
-):
-    if niter % 1000 == 0:
-        dynesty_print_fn(results, niter, ncall, **kwargs)
-
-
-def run_dynesty(pta, outdir):
-    prior_transform = prior_transform_fn(pta)
-    ndim = len(pta.param_names)
-    sampler = DynamicNestedSampler(
-        pta.get_lnlikelihood, prior_transform, ndim, nlive=1000
-    )
-    sampler.run_nested(print_progress=True, print_func=print_dynesty_progress)
-    res = sampler.results
-
-    result_pkl = f"{outdir}/dynesty_result.pkl"
-    with open(result_pkl, "wb") as respkl:
-        pickle.dump(res, respkl)
-
-    return res.samples_equal()
-
-
 def get_summary(pta, outdir, settings):
     return (
         {
@@ -261,40 +168,6 @@ def get_summary(pta, outdir, settings):
             "output_dir": outdir,
             "pta_param_summary": get_pta_param_summary(pta),
         }
-    )
-
-def get_ecw_params(psr, settings):
-    name = settings["ecw_name"]
-
-    tref = max(psr.toas)
-    deltap_max = get_deltap_max(psr)
-    
-    ecw_params = {
-        "sigma": Uniform(0, np.pi)(f"{name}_sigma"),
-        "rho": Uniform(-np.pi, np.pi)(f"{name}_rho"),
-        "log10_M": Uniform(6, 9)(f"{name}_log10_M"),
-        "eta": Uniform(0, 0.25)(f"{name}_eta"),
-        "log10_F": Uniform(-9, -7)(f"{name}_log10_F"),
-        "e0": Uniform(0.01, 0.8)(f"{name}_e0"),
-        "l0": Uniform(-np.pi, np.pi)(f"{name}_l0"),
-        "tref": tref,
-        "log10_A": Uniform(-11, -5)(f"{name}_log10_A"),
-        "deltap": Uniform(0, deltap_max),
-        "psrTerm": settings["ecw_psrTerm"],
-        "spline": settings["ecw_spline"],
-    }
-    ecw_params.update(settings["ecw_frozen_params"])
-
-    return ecw_params
-
-def create_red_noise_empirical_distr(psr, chain_file):
-    samples = np.genfromtxt(chain_file)
-    param_names = [f"{psr.name}_red_noise_gamma", f"{psr.name}_red_noise_log10_A"]
-    
-    gamma_bins = np.linspace(0, 15, 25)
-    log10_A_bins = np.linspace(-20, -11, 25)
-    return EmpiricalDistribution2D(
-        param_names, samples, bins=[gamma_bins, log10_A_bins]
     )
 
 if __name__ == "__main__":

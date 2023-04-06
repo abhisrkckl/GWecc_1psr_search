@@ -7,6 +7,7 @@ import astropy.units as u
 import numpy as np
 from enterprise.pulsar import PintPulsar, Pulsar
 from enterprise.signals.signal_base import PTA
+from enterprise.signals.parameter import Uniform
 from enterprise_extensions import models
 
 from model import model_gwecc_1psr
@@ -100,7 +101,41 @@ def read_data(data_dir: str, par_file: str, tim_file: str, noise_dict_file: str)
     return psr, noise_dict
 
 
-def get_pta(psr, noise_dict, ecw_param_dict, noise_only=False, wn_vary=False, wn_normal_efac=False, rn_vary=True, rn_components=30) -> PTA:
+def get_ecw_params(psr, settings):
+    name = settings["ecw_name"]
+
+    tref = max(psr.toas)
+    deltap_max = get_deltap_max(psr)
+
+    ecw_params = {
+        "sigma": Uniform(0, np.pi)(f"{name}_sigma"),
+        "rho": Uniform(-np.pi, np.pi)(f"{name}_rho"),
+        "log10_M": Uniform(6, 9)(f"{name}_log10_M"),
+        "eta": Uniform(0, 0.25)(f"{name}_eta"),
+        "log10_F": Uniform(-9, -7)(f"{name}_log10_F"),
+        "e0": Uniform(0.01, 0.8)(f"{name}_e0"),
+        "l0": Uniform(-np.pi, np.pi)(f"{name}_l0"),
+        "tref": tref,
+        "log10_A": Uniform(-11, -5)(f"{name}_log10_A"),
+        "deltap": Uniform(0, deltap_max),
+        "psrTerm": settings["ecw_psrTerm"],
+        "spline": settings["ecw_spline"],
+    }
+    ecw_params.update(settings["ecw_frozen_params"])
+
+    return ecw_params
+
+
+def get_pta(
+    psr,
+    noise_dict,
+    ecw_param_dict,
+    noise_only=False,
+    wn_vary=False,
+    wn_normal_efac=False,
+    rn_vary=True,
+    rn_components=30,
+) -> PTA:
     verify_noise_dict(psr, noise_dict)
 
     model = model_gwecc_1psr(
