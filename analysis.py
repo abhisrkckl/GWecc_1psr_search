@@ -184,3 +184,35 @@ def get_deltap_max(psr):
     sigma_Dp = psr.pdist[1]
     Dp_max = Dp + sigma_Dp
     return (Dp_max * u.Unit("kpc") / c.c).to("year").value
+
+def get_pta_from_settings(settings_file):
+    with open(settings_file, "r") as sf:
+        settings = json.load(sf)
+
+    data_dir = settings["data_dir"]
+    par_file = settings["par_file"]
+    tim_file = settings["tim_file"]
+    noise_file = settings["noise_dict_file"]
+
+    psr, noise_dict = read_data(
+        data_dir,
+        par_file,
+        tim_file,
+        noise_file,
+    )
+
+    ecw_params = get_ecw_params(psr, settings)
+
+    # vary_red_noise = settings["vary_red_noise"]
+    pta = get_pta(
+        psr,
+        noise_dict,
+        ecw_params,
+        noise_only=settings["noise_only"],
+        wn_vary=settings["white_noise_vary"],
+        rn_vary=settings["red_noise_vary"],
+        rn_components=settings["red_noise_nharms"],
+    )
+    print("Free parameters :", pta.param_names)
+
+    return pta
