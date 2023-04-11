@@ -80,11 +80,20 @@ def main():
                 pta.param_names.index(f"{psr.name}_red_noise_gamma"),
                 pta.param_names.index(f"{psr.name}_red_noise_log10_A"),
             ]
+            gwecc_freq_mass_group = [
+                pta.param_names.index("gwecc_log10_F"),
+                pta.param_names.index("gwecc_log10_M"),
+            ]
+            gwecc_proj_group = [
+                pta.param_names.index("gwecc_log10_A"),
+                pta.param_names.index("gwecc_sigma"),
+                pta.param_names.index("gwecc_rho"),
+            ]
             run_ptmcmc(
                 pta,
                 settings["ptmcmc_niter"],
                 outdir,
-                groups=[red_noise_group],
+                groups=[red_noise_group, gwecc_freq_mass_group, gwecc_proj_group],
                 empdist=[rn_ed],
             )
             burned_chain = read_ptmcmc_chain(outdir, settings["ptmcmc_burnin_fraction"])

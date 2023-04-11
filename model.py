@@ -1,4 +1,5 @@
 from enterprise.signals.gp_signals import FourierBasisGP, MarginalizingTimingModel
+from enterprise.signals.signal_base import PTA
 from enterprise.signals.parameter import Uniform, Constant
 from enterprise.signals.utils import powerlaw
 from enterprise_extensions.blocks import white_noise_block
