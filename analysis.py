@@ -216,20 +216,3 @@ def get_pta_from_settings(settings_file):
     print("Free parameters :", pta.param_names)
 
     return pta
-
-class FpStat_1psr:
-    def __init__(self, psr, noise_dict):
-        self.pta = get_pta(
-            psr,
-            noise_dict,
-            ecw_param_dict={},
-            noise_only=True,
-            wn_vary=False,
-            wn_normal_efac=False,
-            rn_vary=False,
-            rn_components=30,
-        )
-        assert len(self.pta.param_names) == 0
-
-    def inner_product(self, x, y):
-        
