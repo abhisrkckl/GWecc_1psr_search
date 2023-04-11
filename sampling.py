@@ -43,9 +43,8 @@ def run_ptmcmc(pta, Niter, outdir, groups=None, empdist=None):
         verbose=True,
     )
     # gwecc_params = list(filter(lambda par: "gwecc" in par, pta.param_names))
-    sampler.addProposalToCycle(jp.jp.draw_from_prior, 20)
+    sampler.addProposalToCycle(jp.draw_from_prior, 20)
     sampler.addProposalToCycle(jp.draw_from_empirical_distr, 20)
-    jp.draw_from_prior
 
     # This sometimes fails if the acor package is installed, but works otherwise.
     # I don't know why.
