@@ -26,11 +26,7 @@ def run_ptmcmc(pta, Niter, outdir, groups=None, empdist=None):
 
     print("Starting sampler...\n")
 
-    try:
-        jp = JumpProposal(pta, empirical_distr=empdist)
-    except Exception:
-        # For hypermodel
-        jp = JumpProposal(pta.models[1], empirical_distr=empdist)
+    jp = JumpProposal(pta, empirical_distr=empdist)
 
     sampler = ptmcmc(
         ndim,
