@@ -12,6 +12,7 @@
     "ecw_frozen_params": { },
     "ecw_psrTerm": true,
     "ecw_spline": true,
+    "ecw_upper_limit": true,
     "output_prefix": "fix-wn_vary-rn_vary-ecw--chains",
     "ptmcmc_niter": 4000000,
     "ptmcmc_burnin_fraction": 0.25,

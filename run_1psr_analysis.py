@@ -168,16 +168,13 @@ def get_summary(pta, outdir, settings):
             "user": os.environ["USER"],
             "os": platform.platform(),
             "machine": platform.node(),
-            "slurm_job_id": os.environ["SLURM_JOB_ID"]
-            if "SLURM_JOB_ID" in os.environ
-            else "",
+            "slurm_job_id": os.environ.get("SLURM_JOB_ID", ""),
         }
         | settings
-        | {
-            "output_dir": outdir,
-            "pta_param_summary": get_pta_param_summary(pta),
-        }
-    )
+    ) | {
+        "output_dir": outdir,
+        "pta_param_summary": get_pta_param_summary(pta),
+    }
 
 if __name__ == "__main__":
     main()

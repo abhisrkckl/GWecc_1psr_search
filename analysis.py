@@ -7,7 +7,7 @@ import astropy.units as u
 import numpy as np
 from enterprise.pulsar import PintPulsar, Pulsar
 from enterprise.signals.signal_base import PTA
-from enterprise.signals.parameter import Uniform
+from enterprise.signals.parameter import Uniform, LinearExp
 from enterprise_extensions import models
 
 from model import model_gwecc_1psr
@@ -107,6 +107,8 @@ def get_ecw_params(psr, settings):
     tref = max(psr.toas)
     deltap_max = get_deltap_max(psr)
 
+    log10_A_prior = LinearExp(-12, -4) if settings["ecw_upper_limit"] else Uniform(-12, 4)
+
     ecw_params = {
         "sigma": Uniform(0, np.pi)(f"{name}_sigma"),
         "rho": Uniform(-np.pi, np.pi)(f"{name}_rho"),
@@ -116,7 +118,7 @@ def get_ecw_params(psr, settings):
         "e0": Uniform(0.01, 0.8)(f"{name}_e0"),
         "l0": Uniform(-np.pi, np.pi)(f"{name}_l0"),
         "tref": tref,
-        "log10_A": Uniform(-11, -5)(f"{name}_log10_A"),
+        "log10_A": log10_A_prior(f"{name}_log10_A"),
         "deltap": Uniform(0, deltap_max),
         "psrTerm": settings["ecw_psrTerm"],
         "spline": settings["ecw_spline"],
