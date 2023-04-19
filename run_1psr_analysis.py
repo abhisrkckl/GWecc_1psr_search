@@ -59,7 +59,7 @@ def main():
 
     output_prefix = settings["output_prefix"]
     jobid = "" if "SLURM_JOB_ID" not in os.environ else os.environ["SLURM_JOB_ID"]
-    time_suffix = datetime.now().strftime("%Y-%m-%dT%Hh%Mm%Ss")
+    time_suffix = datetime.now().strftime("%Y-%m-%dT%Hh%Mm")
     outdir = f"{output_prefix}_{jobid}_{time_suffix}/"
     if not os.path.exists(outdir):
         print(f"Creating output dir {outdir}...")
