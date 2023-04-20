@@ -1,17 +1,4 @@
-#!/bin/bash
-
-#SBATCH --ntasks=1
-#SBATCH --mem=24G
-#SBATCH --job-name=gwecc-search
-
-# module load pkgsrc/2022Q2
-
-/home/susobhan/Data/susobhan/miniconda/envs/gwecc/bin/activate
-
-PYTHON=$CONDA_PREFIX/bin/python
-JULIA=$CONDA_PREFIX/bin/julia
-
-echo Script executed by `whoami` at `date`
+echo Script executed by `whoami` at `date` in `hostname`
 $PYTHON --version
 $CONDA_EXE --version
 echo The conda environment is $CONDA_PREFIX
@@ -28,9 +15,3 @@ $PYTHON -c 'import enterprise_extensions; print("enterprise_extensions version",
 $PYTHON -c 'import PTMCMCSampler; print("PTMCMCSampler version", PTMCMCSampler.__version__)' | grep version
 $JULIA --version
 $PYTHON -c 'import enterprise_gwecc as gwecc; print("GWecc version", gwecc.__version__)'
-# mpichversion | head -n 1
-# $PYTHON -c 'import mpi4py as mpi; print("mpi4py version", mpi.__version__)'
-
-echo
-
-$PYTHON run_1psr_analysis.py 1psr_analysis.json

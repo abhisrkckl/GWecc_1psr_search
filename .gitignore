@@ -7,3 +7,9 @@ chain*.txt
 *.npy
 jumps.txt
 chains*
+*.out
+*.bak
+corner.pdf
+summary.json
+*limit*.pdf
+*.dat
